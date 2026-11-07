@@ -1,0 +1,684 @@
+.guru-shell {
+  min-height: 100vh;
+  background: var(--color-background);
+}
+
+.guru-topbar {
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-3) max(24px, calc((100vw - 1200px) / 2));
+  border-block-end: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.guru-brand {
+  color: var(--color-primary);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  text-decoration: none;
+}
+
+.guru-product-name {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.guru-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-inline-start: auto;
+}
+
+.guru-account {
+  max-width: 180px;
+  overflow: hidden;
+  color: var(--color-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.guru-topbar .theme-toggle,
+.guru-topbar .button,
+.guru-page .button {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.guru-topbar .theme-toggle {
+  border-color: var(--color-control-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.guru-topbar .theme-toggle:hover,
+.guru-page .button--secondary:hover:not(:disabled),
+.guru-page .button--ghost:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-surface-elevated);
+}
+
+.guru-topbar .button--secondary,
+.guru-page .button--secondary {
+  border-color: var(--color-control-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.guru-page .button--primary {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.guru-page .button--primary:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.guru-page .button--danger {
+  background: var(--color-danger);
+  color: var(--color-primary-text);
+}
+
+.guru-page .button--danger:hover:not(:disabled) {
+  border-color: var(--color-danger);
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
+}
+
+.guru-topbar .theme-toggle:active:not(:disabled) {
+  background: var(--color-border);
+  transform: translateY(1px);
+}
+
+.guru-page .button--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-primary);
+}
+
+.guru-page .button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.guru-page .button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.guru-page .badge {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  padding: 2px 9px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.guru-page .badge--success {
+  background: var(--color-success-subtle);
+  color: var(--color-success);
+}
+
+.guru-page .badge--neutral {
+  background: var(--color-neutral-subtle);
+  color: var(--color-neutral);
+}
+
+.guru-main {
+  width: min(100% - 48px, 1200px);
+  margin-inline: auto;
+  padding-block: clamp(28px, 5vw, 52px) 64px;
+}
+
+.guru-page .page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-5);
+  margin-block-end: var(--space-6);
+}
+
+.guru-page .page-header__title {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 650;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.guru-page .page-header__description {
+  margin: var(--space-2) 0 0;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.guru-page .card {
+  overflow: visible;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.guru-card .card__content {
+  padding: clamp(16px, 3vw, 24px);
+}
+
+.guru-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(150px, 220px) auto;
+  align-items: end;
+  gap: var(--space-4);
+  margin-block-end: var(--space-5);
+}
+
+.guru-toolbar .field {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-1);
+}
+
+.guru-toolbar .field__label {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.guru-toolbar .field__control,
+.guru-select,
+.guru-form .field__control {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.guru-select {
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.guru-select:hover:not(:disabled),
+.guru-select:active:not(:disabled) {
+  border-color: var(--color-primary);
+}
+
+.guru-select:active:not(:disabled) {
+  background: var(--color-surface-elevated);
+}
+
+.guru-toolbar .field__control::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 1;
+}
+
+.guru-filter {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.guru-count {
+  margin: 0;
+  padding-block: 10px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.guru-notice {
+  margin-block-end: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.guru-notice--error,
+.guru-state--error,
+.guru-dialog__error {
+  color: var(--color-danger);
+}
+
+.guru-state {
+  display: grid;
+  min-height: 220px;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.guru-state h2,
+.guru-state p {
+  margin: 0;
+}
+
+.guru-state h2 {
+  color: var(--color-text);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.guru-state .button {
+  margin-block-start: var(--space-2);
+}
+
+.guru-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--color-border);
+  border-inline-end-color: var(--color-primary);
+  border-radius: 50%;
+  animation: guru-spin 800ms linear infinite;
+}
+
+@keyframes guru-spin {
+  to { transform: rotate(360deg); }
+}
+
+.guru-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.guru-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: start;
+}
+
+.guru-table th,
+.guru-table td {
+  padding: 13px var(--space-3);
+  border-block-end: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.guru-table th {
+  background: var(--color-surface-elevated);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.guru-table td {
+  color: var(--color-text);
+}
+
+.guru-table tbody tr:last-child td {
+  border-block-end: 0;
+}
+
+.guru-table__name {
+  font-weight: 550;
+}
+
+.guru-date {
+  color: var(--color-text-secondary) !important;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.guru-row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.guru-page .guru-action {
+  min-height: 40px;
+  padding-inline: 9px;
+  font-size: 12px;
+}
+
+.guru-page .guru-action--status {
+  color: var(--color-danger);
+}
+
+.guru-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-block-start: var(--space-4);
+}
+
+.guru-pagination p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.guru-pagination > div {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.guru-dialog {
+  width: min(100% - 32px, 480px);
+  max-height: min(86vh, 720px);
+  padding: 0;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-card);
+}
+
+.guru-dialog::backdrop {
+  background: rgb(5 15 35 / 55%);
+}
+
+.guru-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-block-end: 1px solid var(--color-border);
+}
+
+.guru-dialog__header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.guru-page .guru-dialog__close {
+  width: 44px;
+  padding: 0;
+  font-size: 24px;
+}
+
+.guru-form,
+.guru-confirm,
+.guru-detail {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+.guru-form .field {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.guru-form .field__label {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 550;
+}
+
+.guru-dialog__error {
+  margin: 0;
+  font-size: 13px;
+}
+
+.guru-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-block-start: var(--space-2);
+}
+
+.guru-confirm p {
+  margin: 0;
+}
+
+.guru-detail {
+  margin: 0;
+}
+
+.guru-detail > div:not(.guru-dialog__actions) {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) 1.3fr;
+  gap: var(--space-3);
+}
+
+.guru-detail dt {
+  color: var(--color-text-secondary);
+}
+
+.guru-detail dd {
+  min-width: 0;
+  margin: 0;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  .guru-topbar {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  .guru-product-name {
+    margin-inline-end: auto;
+  }
+
+  .guru-topbar__actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-inline-start: 0;
+  }
+
+  .guru-table th,
+  .guru-table td {
+    padding-inline: 10px;
+  }
+
+  .guru-date {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 680px) {
+  .guru-topbar {
+    padding: var(--space-3) 16px;
+  }
+
+  .guru-topbar__actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .guru-account {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .guru-main {
+    width: min(100% - 32px, 1200px);
+    padding-block: 28px 48px;
+  }
+
+  .guru-page .page-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .guru-page .page-header__actions,
+  .guru-page .page-header__actions .button {
+    width: 100%;
+  }
+
+  .guru-toolbar {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+    margin-block-end: var(--space-4);
+  }
+
+  .guru-count {
+    padding: 0;
+    text-align: start;
+  }
+
+  .guru-table-wrap {
+    overflow: visible;
+    border: 0;
+  }
+
+  .guru-table,
+  .guru-table tbody,
+  .guru-table tr,
+  .guru-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .guru-table thead {
+    display: block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .guru-table thead tr,
+  .guru-table thead th {
+    display: block;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .guru-table tbody {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .guru-table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+  }
+
+  .guru-table td {
+    display: grid;
+    min-width: 0;
+    gap: 3px;
+    padding: 0;
+    border: 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .guru-table td::before {
+    content: attr(data-label);
+    color: var(--color-text-secondary);
+    font-size: 11px;
+    font-weight: 550;
+  }
+
+  .guru-table .guru-table__name {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    font-size: 15px;
+  }
+
+  .guru-table .guru-table__name::before {
+    content: none;
+  }
+
+  .guru-table td:last-child {
+    grid-column: 1 / -1;
+    margin-block-start: var(--space-1);
+    padding-block-start: var(--space-2);
+    border-block-start: 1px solid var(--color-border);
+  }
+
+  .guru-row-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .guru-page .guru-action {
+    min-height: 44px;
+    padding-inline: 10px;
+  }
+
+  .guru-pagination {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .guru-pagination > div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .guru-pagination .button {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guru-page .button,
+  .guru-select {
+    transition: none;
+  }
+
+  .guru-spinner {
+    animation: none;
+  }
+}

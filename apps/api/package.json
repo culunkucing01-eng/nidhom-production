@@ -1,0 +1,21 @@
+{
+  "name": "api",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --local --config wrangler.local.jsonc",
+    "deploy": "node scripts/deploy.mjs",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "test:local-auth": "node scripts/test-local-auth-rate-limit.mjs",
+    "test:local-guru": "node scripts/test-guru-api.mjs",
+    "test:local-kelas": "node scripts/test-kelas-api.mjs",
+    "test:local-mapel": "node scripts/test-mapel-api.mjs",
+    "test:deployment-guards": "node scripts/test-deployment-guards.mjs"
+  },
+  "dependencies": {
+    "hono": "^4.13.16"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "wrangler": "^4.158.0"
+  }
+}

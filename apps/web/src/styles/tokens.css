@@ -1,0 +1,83 @@
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --color-navy: #172b4d;
+  --color-academic-blue: #31527a;
+  --color-soft-blue: #eaf0f8;
+
+  --color-background: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  --color-text: #202923;
+  --color-text-secondary: #647184;
+  --color-border: #e3e8ef;
+  --color-control-border: #78869a;
+  --color-primary: #172b4d;
+  --color-primary-hover: #243e65;
+  --color-primary-text: #ffffff;
+  --color-accent: #31527a;
+  --color-focus: #31527a;
+
+  --color-success: #237a45;
+  --color-success-subtle: #e8f4ec;
+  --color-warning: #9a6500;
+  --color-warning-subtle: #fff4d6;
+  --color-danger: #b42318;
+  --color-danger-subtle: #fee4e2;
+  --color-info: #245b9a;
+  --color-info-subtle: #eaf0f8;
+  --color-neutral: #526174;
+  --color-neutral-subtle: #eef1f5;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-card: 0 1px 2px rgb(23 43 77 / 6%);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-navy: #172b4d;
+  --color-academic-blue: #31527a;
+  --color-soft-blue: #eaf0f8;
+
+  --color-background: #101722;
+  --color-surface: #182333;
+  --color-surface-elevated: #202e41;
+  --color-text: #f1f4f8;
+  --color-text-secondary: #a6b2c2;
+  --color-border: #2d3c50;
+  --color-control-border: #78869a;
+  --color-primary: #8daed8;
+  --color-primary-hover: #a6c1e4;
+  --color-primary-text: #101722;
+  --color-accent: #a6c1e4;
+  --color-focus: #a6c1e4;
+
+  --color-success: #65c987;
+  --color-success-subtle: #20372d;
+  --color-warning: #e8b34d;
+  --color-warning-subtle: #3a3020;
+  --color-danger: #ff928a;
+  --color-danger-subtle: #3c2728;
+  --color-info: #83b9f0;
+  --color-info-subtle: #20344a;
+  --color-neutral: #b7c2d0;
+  --color-neutral-subtle: #29384b;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 18%);
+}

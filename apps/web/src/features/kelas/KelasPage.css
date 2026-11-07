@@ -1,0 +1,54 @@
+.kelas-page .kelas-table th:first-child,
+.kelas-page .kelas-table td:first-child {
+  width: 84px;
+  white-space: nowrap;
+}
+
+.kelas-page .kelas-table td:nth-child(4) {
+  text-align: center;
+}
+
+.kelas-page .guru-brand {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  transition: color 140ms ease, transform 140ms ease;
+}
+
+.kelas-page .guru-brand:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.kelas-page .guru-brand:active {
+  color: var(--color-accent);
+  transform: translateY(1px);
+}
+
+.kelas-page .guru-action {
+  min-height: 44px;
+}
+
+.kelas-page .guru-admin-nav__link,
+.kelas-page .guru-topbar .theme-toggle,
+.kelas-page .guru-topbar .button {
+  min-height: 44px;
+}
+
+@media (max-width: 680px) {
+  .kelas-page .kelas-table th:first-child,
+  .kelas-page .kelas-table td:first-child {
+    width: auto;
+  }
+
+  .kelas-page .kelas-table td:nth-child(4) {
+    text-align: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kelas-page .guru-brand {
+    transition: none;
+  }
+}

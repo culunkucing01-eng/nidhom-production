@@ -1,0 +1,150 @@
+.mapel-page .mapel-table {
+  min-width: 860px;
+}
+
+.mapel-page .mapel-table th:first-child,
+.mapel-page .mapel-table td:first-child {
+  width: 72px;
+  white-space: nowrap;
+}
+
+.mapel-page .mapel-table th:nth-child(4),
+.mapel-page .mapel-table td:nth-child(4) {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.mapel-page .mapel-table th:nth-child(5),
+.mapel-page .mapel-table td:nth-child(5) {
+  white-space: nowrap;
+}
+
+.mapel-page .mapel-table__arabic {
+  min-width: 160px;
+  font-size: 17px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.mapel-page .mapel-table__arabic span {
+  display: block;
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
+.mapel-page .mapel-table__indonesian {
+  min-width: 150px;
+  overflow-wrap: anywhere;
+}
+
+.mapel-page .mapel-empty-value {
+  color: var(--color-text-secondary);
+}
+
+.mapel-page .guru-admin-nav__link {
+  min-width: 0;
+  flex: 1 1 0;
+  white-space: normal;
+}
+
+.mapel-page .guru-admin-nav__link,
+.mapel-page .guru-topbar .theme-toggle,
+.mapel-page .guru-topbar .button,
+.mapel-page .guru-action {
+  min-height: 44px;
+}
+
+.mapel-page .guru-action {
+  min-width: 44px;
+  flex: 0 0 auto;
+  padding-inline: 9px;
+}
+
+.mapel-page .guru-dialog__close {
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+}
+
+.mapel-page .mapel-dialog .field__control[dir='rtl'] {
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
+.mapel-dialog .mapel-detail-list {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.mapel-dialog .mapel-detail-list > div {
+  display: grid;
+  grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1.3fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.mapel-dialog .mapel-detail-list dd[dir='rtl'] {
+  text-align: right;
+  unicode-bidi: plaintext;
+}
+
+.mapel-dialog .mapel-dialog__state {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 680px) {
+  .mapel-page .mapel-table {
+    min-width: 0;
+  }
+
+  .mapel-page .mapel-table th:nth-child(4),
+  .mapel-page .mapel-table td:nth-child(4) {
+    text-align: start;
+  }
+
+  .mapel-page .mapel-table__arabic {
+    min-width: 0;
+    font-size: 18px;
+  }
+
+  .mapel-page .mapel-table__indonesian {
+    min-width: 0;
+  }
+}
+
+@media (min-width: 681px) and (max-width: 900px) {
+  .mapel-page .mapel-table {
+    min-width: 760px;
+  }
+
+  .mapel-page .mapel-table th,
+  .mapel-page .mapel-table td {
+    padding-inline: 8px;
+  }
+
+  .mapel-page .mapel-table th:first-child,
+  .mapel-page .mapel-table td:first-child {
+    width: 56px;
+  }
+
+  .mapel-page .mapel-table__arabic {
+    min-width: 124px;
+  }
+
+  .mapel-page .mapel-table__indonesian {
+    min-width: 118px;
+  }
+
+  .mapel-page .guru-row-actions {
+    gap: 1px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mapel-page .guru-action {
+    transition: none;
+  }
+}
