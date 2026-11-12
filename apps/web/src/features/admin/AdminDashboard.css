@@ -1,0 +1,95 @@
+.admin-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  width: 100%;
+  color: var(--color-text);
+}
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+}
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 112px;
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-left: 0;
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(20,55,39,.09); }
+.stat-card__icon {
+  display: grid;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+  place-items: center;
+  border-radius: 15px;
+  font-size: 22px;
+}
+.stat-card__icon--info { background: var(--color-info-subtle); color: var(--color-info); }
+.stat-card__icon--success { background: var(--color-success-subtle); color: var(--color-success); }
+.stat-card__icon--warning { background: var(--color-warning-subtle); color: var(--color-warning); }
+.stat-card__icon--primary { background: #E5CD82; color: #15370D; }
+.stat-card__icon--neutral { background: var(--color-neutral-subtle); color: var(--color-neutral); }
+.stat-card__icon--danger { background: var(--color-danger-subtle); color: var(--color-danger); }
+.stat-card__label {
+  margin: 0 0 6px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+}
+.stat-card__value { margin: 0; color: var(--color-text); font-size: 28px; font-weight: 800; letter-spacing: -.04em; }
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+.dashboard-column { display: flex; min-width: 0; flex-direction: column; gap: 18px; }
+.dashboard-card {
+  display: flex;
+  min-width: 0;
+  min-height: 210px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.dashboard-card__header { padding: 18px 20px; border-bottom: 1px solid var(--color-border); }
+.dashboard-card__header h2 { margin: 0; color: var(--color-text); font-size: 15px; font-weight: 750; }
+.dashboard-card__body { flex: 1; padding: 20px; }
+.dashboard-placeholder { margin: 0; color: var(--color-text-secondary); font-size: 13px; }
+.quick-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.quick-actions .button { min-height: 46px; justify-content: flex-start; border-radius: 11px; }
+.sync-list { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.sync-item {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 13px 14px; border: 1px solid var(--color-border);
+  border-radius: 12px; background: var(--color-surface-elevated);
+}
+.sync-item__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sync-item__file { color: var(--color-text); font-size: 13px; font-weight: 700; }
+.sync-item__entity { padding: 4px 8px; border-radius: 7px; background: var(--color-neutral-subtle); color: var(--color-neutral); font-size: 11px; }
+.sync-item__summary { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; color: var(--color-text-secondary); font-size: 12px; }
+.sync-item__time { width: 100%; color: var(--color-text-secondary); font-size: 11px; }
+.dashboard-loading { display: grid; min-height: 220px; place-items: center; color: var(--color-text-secondary); }
+.dashboard-error { padding: 12px 14px; border: 1px solid var(--color-danger-subtle); border-radius: 10px; background: var(--color-danger-subtle); color: var(--color-danger); }
+@media (max-width: 900px) { .dashboard-sections { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  .dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .stat-card { min-height: 96px; gap: 10px; padding: 13px; }
+  .stat-card__icon { width: 40px; height: 40px; flex-basis: 40px; border-radius: 12px; font-size: 18px; }
+  .stat-card__value { font-size: 22px; }
+  .stat-card__label { font-size: 10px; }
+  .quick-actions { grid-template-columns: 1fr; }
+}

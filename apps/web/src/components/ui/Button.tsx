@@ -30,7 +30,13 @@ export function Button({
       disabled={disabled || loading}
       type={type}
     >
-      {loading && <span aria-hidden="true" className="button__loading-mark" />}
+      {loading && (
+        <span aria-hidden="true" className="button__loading-mark">
+          <span className="button__loading-dot" />
+          <span className="button__loading-dot" />
+          <span className="button__loading-dot" />
+        </span>
+      )}
       {children}
     </button>
   )

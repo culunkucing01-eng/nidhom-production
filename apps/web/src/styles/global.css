@@ -1,64 +1,101 @@
-@import './tokens.css';
 
 :root {
-  font-family: var(--font-sans);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: var(--color-text);
-  background: var(--color-background);
+    --color-primary: #008B68;
+    --color-primary-dark: #005B46;
+    --color-primary-darker: #073B2E;
+    --color-gold: #C7A45A;
+    --color-gold-dark: #8F7A3E;
+    --color-background: #F7F9F7;
+    --color-surface: #FFFFFF;
+    --color-surface-elevated: #F3F6F4;
+    --color-border: #E4EBE6;
+    --color-text: #172B25;
+    --color-text-secondary: #78877F;
+    --color-success: #008B68;
+    --color-success-subtle: #E5F4EB;
+    --color-warning: #C7A45A;
+    --color-warning-subtle: #FBF3E5;
+    --color-danger: #B42318;
+    --color-danger-subtle: #FEE4E2;
+    --color-focus: #008B68;
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 18px;
+    --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --shadow-card-hover: 0 12px 28px rgba(20, 55, 39, 0.09);
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 20px;
+    --space-6: 24px;
+  }
 
-  font-optical-sizing: auto;
-}
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-background: #0F172A;
+      --color-surface: #1E293B;
+      --color-surface-elevated: #2D3A48;
+      --color-border: #334155;
+      --color-text: #F8FAFC;
+      --color-text-secondary: #CBD5E1;
+      --color-success: #65C987;
+      --color-success-subtle: #20372D;
+      --color-warning: #E8B34D;
+      --color-warning-subtle: #3A3020;
+      --color-danger: #FF928A;
+      --color-danger-subtle: #3C2728;
+      --color-focus: #65C987;
+    }
+  }
 
-* {
-  box-sizing: border-box;
-}
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-body {
-  min-width: 0;
-  min-height: 100vh;
-  margin: 0;
-  background: var(--color-background);
-  color: var(--color-text);
-  font-size: 14px;
-  line-height: 1.5;
-}
+  html {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-button,
-input {
-  font: inherit;
-}
+  body {
+    min-width: 0;
+    min-height: 100vh;
+    margin: 0;
+    background: var(--color-background);
+    color: var(--color-text);
+    font-size: 14px;
+    line-height: 1.5;
+  }
 
-button:not(:disabled),
-select:not(:disabled),
-a[href],
-label[for] {
-  cursor: pointer;
-}
+  h1, h2, h3, h4 {
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
 
-button:disabled,
-select:disabled,
-input:disabled,
-.field--disabled label[for] {
-  cursor: not-allowed;
-}
+  button {
+    font-family: inherit;
+  }
 
-button,
-input {
-  color: inherit;
-}
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
 
-button:focus-visible,
-select:focus-visible,
-input:focus-visible,
-a:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 2px;
-}
+  input, select, textarea {
+    font-family: inherit;
+  }
 
-::selection {
-  color: var(--color-primary-text);
-  background: var(--color-primary);
-}
+  .islamic-pattern {
+    background-image:
+      linear-gradient(#008B68 1px, transparent 1px),
+      linear-gradient(90deg, #008B68 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.03;
+  }
+

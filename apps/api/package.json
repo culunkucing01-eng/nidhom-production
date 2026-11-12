@@ -4,15 +4,22 @@
   "scripts": {
     "dev": "wrangler dev --local --config wrangler.local.jsonc",
     "deploy": "node scripts/deploy.mjs",
+    "migrate:prod": "node scripts/apply-migrations.mjs",
+    "migrate:prod:dry-run": "node scripts/apply-migrations.mjs --dry-run",
+    "reset:local-admin": "node scripts/reset-local-admin-password.mjs",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "test:local-auth": "node scripts/test-local-auth-rate-limit.mjs",
+    "test:local-admin-reset": "node scripts/reset-local-admin-password.mjs --self-test",
+    "test:local-admin-flow": "node scripts/test-local-admin-flow.mjs",
     "test:local-guru": "node scripts/test-guru-api.mjs",
     "test:local-kelas": "node scripts/test-kelas-api.mjs",
     "test:local-mapel": "node scripts/test-mapel-api.mjs",
-    "test:deployment-guards": "node scripts/test-deployment-guards.mjs"
+    "test:deployment-guards": "node scripts/test-deployment-guards.mjs",
+    "test:migration-guards": "node scripts/test-migration-guards.mjs"
   },
   "dependencies": {
-    "hono": "^4.13.16"
+    "hono": "^4.13.16",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
