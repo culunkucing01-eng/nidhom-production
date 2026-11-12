@@ -7,6 +7,39 @@ import './AdminLayout.css'
 const screenTitles: Record<AdminScreen, string> = {
   overview: 'Dashboard',
   izin: 'Rekapitulasi',
+  guru: 'Data Guru',
+  kelas: 'Data Kelas',
+  mapel: 'Mata Pelajaran',
+  jadwal: 'Kelola Jadwal',
+}
+
+const navSections: AdminScreen[] = ['overview', 'izin']
+
+/* Ikon minimalis untuk aksi cepat sidebar (mewarisi warna via currentColor) */
+function IconPlus() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+  )
+}
+function IconBuilding() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 21V8l8-5 8 5v13" /><path d="M4 21h16" /><path d="M9 21v-6h6v6" /></svg>
+  )
+}
+function IconBook() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z" /><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z" /></svg>
+  )
+}
+function IconUpload() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M4 20h16" /></svg>
+  )
+}
+function IconCalendar() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M8 2v4M16 2v4" /><path d="M3 10h18" /></svg>
+  )
 }
 
 interface AdminLayoutProps {
@@ -16,6 +49,7 @@ interface AdminLayoutProps {
   onLogout: () => void
   onToggleTheme: () => void
   theme: Theme
+  onImportExcel: () => void
   logoutLoading?: boolean
   children: ReactNode
 }
@@ -26,6 +60,7 @@ export function AdminLayout({
   setScreen,
   onLogout,
   onToggleTheme,
+  onImportExcel,
   theme,
   logoutLoading = false,
   children,
@@ -38,6 +73,7 @@ export function AdminLayout({
         logoutLoading={logoutLoading}
         onLogout={onLogout}
         onToggleTheme={onToggleTheme}
+        onImportExcel={onImportExcel}
         theme={theme}
       >
         {children}
@@ -52,6 +88,7 @@ interface AdminLayoutShellProps {
   logoutLoading: boolean
   onLogout: () => void
   onToggleTheme: () => void
+  onImportExcel: () => void
   theme: Theme
   children: ReactNode
 }
@@ -62,10 +99,19 @@ function AdminLayoutShell({
   logoutLoading,
   onLogout,
   onToggleTheme,
+  onImportExcel,
   theme,
   children,
 }: AdminLayoutShellProps) {
   const { setScreen } = useContext(AdminLayoutContext) as { screen: AdminScreen; setScreen: (screen: AdminScreen) => void }
+
+  const quickActions: { key: string; label: string; icon: ReactNode; screen?: AdminScreen }[] = [
+    { key: 'guru', label: 'Tambah Guru', icon: <IconPlus />, screen: 'guru' },
+    { key: 'kelas', label: 'Tambah Kelas', icon: <IconBuilding />, screen: 'kelas' },
+    { key: 'mapel', label: 'Mata Pelajaran', icon: <IconBook />, screen: 'mapel' },
+    { key: 'import', label: 'Import Excel', icon: <IconUpload /> },
+    { key: 'jadwal', label: 'Kelola Jadwal', icon: <IconCalendar />, screen: 'jadwal' },
+  ]
 
   return (
     <div className="admin-layout">
@@ -78,7 +124,7 @@ function AdminLayoutShell({
           </div>
         </div>
         <nav className="admin-sidebar__nav">
-          {(Object.keys(screenTitles) as AdminScreen[]).map((section) => (
+          {navSections.map((section) => (
             <button
               key={section}
               className={`admin-sidebar__link ${screen === section ? 'is-active' : ''}`}
@@ -89,6 +135,20 @@ function AdminLayoutShell({
             </button>
           ))}
         </nav>
+        <div className="admin-sidebar__actions">
+          <p className="admin-sidebar__actions-title">Aksi Cepat</p>
+          {quickActions.map((action) => (
+            <button
+              key={action.key}
+              className={`admin-sidebar__action ${action.screen && screen === action.screen ? 'is-active' : ''}`}
+              onClick={() => (action.screen ? setScreen(action.screen) : onImportExcel())}
+              type="button"
+            >
+              <span className="admin-sidebar__action-icon">{action.icon}</span>
+              <span className="admin-sidebar__action-label">{action.label}</span>
+            </button>
+          ))}
+        </div>
       </aside>
       <div className="admin-layout__main">
         <header className="admin-header">

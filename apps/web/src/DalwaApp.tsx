@@ -17,7 +17,61 @@ import { AdminDashboard } from './features/admin/AdminDashboard'
 import { AdminLayout } from './features/admin/AdminLayout'
 import type { AdminScreen } from './features/admin/AdminLayoutContext'
 import { RekapitulasiPage } from './features/rekapitulasi/RekapitulasiPage'
+import { EntityManager, type EntityColumn, type EntityField } from './features/admin/EntityManager'
+import { ImportExcelModal } from './features/admin/ImportExcelModal'
+import { createGuru, listGuru } from './lib/guruApi'
+import { createKelas, listKelas } from './lib/kelasApi'
+import { createMapel, listMapel } from './features/mapel/mapelApi'
 import './styles/earthy.css'
+
+/* Konfigurasi manajemen entitas (daftar + tambah) untuk aksi cepat sidebar admin */
+const activeStatusColumn: EntityColumn = {
+  key: 'status',
+  label: 'Status',
+  render: (row) => (row.is_active === 1 ? 'Aktif' : 'Nonaktif'),
+}
+const guruColumns: EntityColumn[] = [
+  { key: 'kode', label: 'Kode' },
+  { key: 'nama', label: 'Nama' },
+  activeStatusColumn,
+]
+const guruFields: EntityField[] = [
+  { name: 'kode', label: 'Kode Guru', placeholder: 'mis. GRU-001' },
+  { name: 'nama', label: 'Nama Guru', placeholder: 'Nama lengkap' },
+]
+const kelasColumns: EntityColumn[] = [{ key: 'nama', label: 'Nama Kelas' }, activeStatusColumn]
+const kelasFields: EntityField[] = [{ name: 'nama', label: 'Nama Kelas', placeholder: 'mis. Kelas A' }]
+const mapelColumns: EntityColumn[] = [
+  { key: 'nama_arab', label: 'Nama (Arab)' },
+  { key: 'nama_indo', label: 'Nama (Indonesia)' },
+  activeStatusColumn,
+]
+const mapelFields: EntityField[] = [
+  { name: 'nama_arab', label: 'Nama Arab', placeholder: 'القرآن' },
+  { name: 'nama_indo', label: 'Nama Indonesia (opsional)', placeholder: 'Al-Quran' },
+]
+
+async function loadGuru() {
+  const response = await listGuru({ page: 1, perPage: 50, q: '', status: 'all' })
+  return response.data as unknown as Record<string, unknown>[]
+}
+async function createGuruItem(values: Record<string, string>) {
+  await createGuru({ kode: values.kode ?? '', nama: values.nama ?? '' })
+}
+async function loadKelas() {
+  const response = await listKelas({ page: 1, perPage: 50, q: '', status: 'all' })
+  return response.data as unknown as Record<string, unknown>[]
+}
+async function createKelasItem(values: Record<string, string>) {
+  await createKelas({ nama: values.nama ?? '' })
+}
+async function loadMapel() {
+  const response = await listMapel({ page: 1, perPage: 50, q: '', status: 'all' })
+  return response.data as unknown as Record<string, unknown>[]
+}
+async function createMapelItem(values: Record<string, string>) {
+  await createMapel({ nama_arab: values.nama_arab ?? '', nama_indo: values.nama_indo ? values.nama_indo : null })
+}
 
 type Screen =
   | 'landing'
@@ -116,6 +170,7 @@ export default function DalwaApp() {
   const [booting, setBooting] = useState(true)
   const [screen, setScreen] = useState<Screen>('landing')
   const [adminScreen, setAdminScreen] = useState<AdminScreen>('overview')
+  const [importOpen, setImportOpen] = useState(false)
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
   const [adminUser, setAdminUser] = useState('Admin')
@@ -393,16 +448,60 @@ export default function DalwaApp() {
       logoutLoading={logoutLoading}
       onLogout={handleLogout}
       onToggleTheme={toggleTheme}
+      onImportExcel={() => setImportOpen(true)}
       screen={adminScreen}
       setScreen={setAdminScreen}
       theme={theme}
       user={user}
     >
-      {adminScreen === 'izin' ? (
-        <RekapitulasiPage onBack={() => setAdminScreen('overview')} />
-      ) : (
-        <AdminDashboard />
+      {adminScreen === 'izin' && <RekapitulasiPage onBack={() => setAdminScreen('overview')} />}
+      {adminScreen === 'overview' && <AdminDashboard />}
+      {adminScreen === 'guru' && (
+        <EntityManager
+          title="Data Guru"
+          subtitle="Kelola data guru pesantren."
+          emptyHint="Belum ada data guru. Tambah guru atau impor dari Excel."
+          columns={guruColumns}
+          fields={guruFields}
+          load={loadGuru}
+          create={createGuruItem}
+        />
       )}
+      {adminScreen === 'kelas' && (
+        <EntityManager
+          title="Data Kelas"
+          subtitle="Kelola data kelas."
+          emptyHint="Belum ada data kelas. Tambah kelas atau impor dari Excel."
+          columns={kelasColumns}
+          fields={kelasFields}
+          load={loadKelas}
+          create={createKelasItem}
+        />
+      )}
+      {adminScreen === 'mapel' && (
+        <EntityManager
+          title="Mata Pelajaran"
+          subtitle="Kelola mata pelajaran."
+          emptyHint="Belum ada mata pelajaran. Tambah atau impor dari Excel."
+          columns={mapelColumns}
+          fields={mapelFields}
+          load={loadMapel}
+          create={createMapelItem}
+        />
+      )}
+      {adminScreen === 'jadwal' && (
+        <Card className="dashboard-card">
+          <header className="dashboard-card__header">
+            <h2>Kelola Jadwal</h2>
+          </header>
+          <div className="dashboard-card__body">
+            <p className="dashboard-placeholder">
+              Manajemen jadwal pelajaran akan tersedia di sini. Gunakan Impor Excel (jenis "Jadwal") untuk memasukkan jadwal.
+            </p>
+          </div>
+        </Card>
+      )}
+      {importOpen && <ImportExcelModal onClose={() => setImportOpen(false)} />}
     </AdminLayout>
   )
 }

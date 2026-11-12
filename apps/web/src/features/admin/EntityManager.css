@@ -1,0 +1,47 @@
+.entity-manager {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+.entity-manager__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.entity-manager__title { margin: 0; font-size: 20px; font-weight: 750; color: var(--color-text); }
+.entity-manager__subtitle { margin: 2px 0 0; font-size: 13px; color: var(--color-text-secondary); }
+.entity-manager__hint {
+  margin: 0;
+  padding: 28px 20px;
+  text-align: center;
+  color: var(--color-text-secondary);
+  border: 1px dashed var(--color-border);
+  border-radius: 14px;
+  font-size: 14px;
+}
+.entity-manager__error {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--color-danger-subtle);
+  color: var(--color-danger);
+  font-size: 13px;
+}
+.entity-table__wrapper { overflow-x: auto; border: 1px solid var(--color-border); border-radius: 14px; }
+.entity-table { width: 100%; border-collapse: collapse; min-width: 340px; }
+.entity-table th, .entity-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--color-border); font-size: 14px; }
+.entity-table th { background: var(--color-surface-elevated); color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+.entity-table tr:last-child td { border-bottom: 0; }
+.entity-modal__overlay {
+  position: fixed; inset: 0; z-index: 50;
+  display: grid; place-items: center; padding: 16px;
+  background: rgba(10, 20, 12, .5);
+}
+.entity-modal { width: 100%; max-width: 440px; }
+.entity-modal__title { margin: 0; font-size: 18px; color: var(--color-text); }
+.entity-modal__form { display: grid; gap: 14px; margin-top: 14px; }
+.entity-modal__error { margin: 0; font-size: 13px; color: var(--color-danger); font-weight: 600; }
+.entity-modal__actions { display: flex; justify-content: flex-end; gap: 10px; }
