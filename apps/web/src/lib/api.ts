@@ -50,10 +50,16 @@ function isAuthenticatedUser(value: unknown): value is AuthenticatedUser {
   )
 }
 
+const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? '').trim().replace(/\/+$/, '')
+
+function apiUrl(path: string): string {
+  return path.startsWith('/') ? `${API_BASE}${path}` : `${API_BASE}/${path}`
+}
+
 async function requestJson(path: string, init?: RequestInit): Promise<unknown> {
   let response: Response
   try {
-    response = await fetch(path, {
+    response = await fetch(apiUrl(path), {
       ...init,
       credentials: 'include',
       headers: {
@@ -62,7 +68,9 @@ async function requestJson(path: string, init?: RequestInit): Promise<unknown> {
       },
     })
   } catch {
-    throw new Error('Authentication API is unreachable')
+    throw new Error(
+      'Tidak dapat menghubungi server. Pastikan backend berjalan di http://127.0.0.1:8787 (npm run dev di apps/api) dan frontend dijalankan melalui npm run dev.',
+    )
   }
 
   if (!response.ok) {
