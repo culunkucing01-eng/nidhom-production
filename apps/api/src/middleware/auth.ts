@@ -187,11 +187,28 @@ export const authMiddleware: MiddlewareHandler<AuthEnv> = async (c, next) => {
   await next();
 };
 
+// Endpoint yang boleh diakses TANPA sesi (publik). Selain ini mewajibkan sesi.
+function isPublicAuthRequest(method: string, path: string): boolean {
+  if (method === "POST" && (path === "/auth/login" || path === "/auth/logout")) {
+    return true;
+  }
+  if (method === "GET" && path === "/api/teacher/guru-list") {
+    return true;
+  }
+  if (
+    method === "POST" &&
+    (path === "/api/teacher/login" || path === "/api/teacher/logout")
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export const applicationAuthMiddleware: MiddlewareHandler<AuthEnv> = async (c, next) => {
   const path = c.req.path;
   const method = c.req.method;
 
-  if (method === "POST" && (path === "/auth/login" || path === "/auth/logout")) {
+  if (isPublicAuthRequest(method, path)) {
     await next();
     return;
   }
