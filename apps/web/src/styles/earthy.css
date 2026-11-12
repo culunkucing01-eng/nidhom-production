@@ -31,6 +31,8 @@
 
   --dl-text: #1b2a16;
   --dl-text-2: #56694f;
+  --dl-text-light: #F9F6EE;   /* teks kontras tinggi di atas latar gelap */
+  --dl-title: #15370d;        /* warna judul/heading (ikon/teks besar) */
   --dl-border: #E8E3D2;
   --dl-focus: #728e6d;
 
@@ -82,7 +84,9 @@
   --dl-on-accent: #10260c;
 
   --dl-text: #f2f6e7;
-  --dl-text-2: #b9c8ad;
+  --dl-text-2: #D7DFCC;
+  --dl-text-light: #F9F6EE;
+  --dl-title: #F9F6EE;        /* judul terang agar kontras di mode gelap */
   --dl-border: #35473c;
   --dl-focus: #a9c4a0;
 
@@ -191,13 +195,14 @@ button, input, select, textarea { font-family: inherit; font-size: 1rem; }
 
 /* ---------- Field / Input (komponen UI) ---------- */
 .field { display: grid; gap: var(--dl-space-2); }
-.field__label { font-weight: 700; font-size: .95rem; }
+.field__label { color: var(--dl-text); font-weight: 700; font-size: .95rem; }
 .field__control {
   width: 100%; min-height: var(--dl-tap); padding: var(--dl-space-3) var(--dl-space-4);
   background: var(--dl-surface); color: var(--dl-text);
   border: 2px solid var(--dl-border); border-radius: var(--dl-radius-md);
 }
 .field__control:focus { border-color: var(--dl-focus); }
+.field__control::placeholder { color: var(--dl-text-2); opacity: 1; }
 .field__support { font-size: .82rem; color: var(--dl-text-2); }
 .field__error { font-size: .85rem; color: var(--dl-danger); font-weight: 600; }
 .field--disabled { opacity: .6; }
@@ -226,7 +231,7 @@ button, input, select, textarea { font-family: inherit; font-size: 1rem; }
 }
 .dl-hero__inner { position: relative; padding: var(--dl-space-8) var(--dl-space-4); text-align: center; display: grid; gap: var(--dl-space-4); }
 .dl-hero__badge { justify-self: center; }
-.dl-hero__title { font-size: clamp(1.7rem, 6vw, 2.6rem); color: var(--dl-header); }
+.dl-hero__title { font-size: clamp(1.7rem, 6vw, 2.6rem); color: var(--dl-title); }
 .dl-hero__lede { color: var(--dl-text-2); max-width: 46ch; margin: 0 auto; }
 .dl-entries { display: grid; gap: var(--dl-space-4); }
 .dl-entry {
@@ -236,7 +241,7 @@ button, input, select, textarea { font-family: inherit; font-size: 1rem; }
 }
 .dl-entry:active { transform: translateY(1px); }
 .dl-entry__icon { font-size: 1.8rem; }
-.dl-entry__title { font-size: 1.2rem; color: var(--dl-header); }
+.dl-entry__title { font-size: 1.2rem; color: var(--dl-title); }
 .dl-entry__desc { color: var(--dl-text-2); }
 .dl-entry--accent { border-color: var(--dl-accent); }
 
@@ -248,7 +253,7 @@ button, input, select, textarea { font-family: inherit; font-size: 1rem; }
   background: var(--dl-surface); border: 1px solid var(--dl-border); border-radius: var(--dl-radius-md);
   padding: var(--dl-space-4); display: grid; gap: 2px; box-shadow: var(--dl-shadow);
 }
-.dl-stat__value { font-size: 1.9rem; font-weight: 800; color: var(--dl-header); line-height: 1; }
+.dl-stat__value { font-size: 1.9rem; font-weight: 800; color: var(--dl-title); line-height: 1; }
 .dl-stat__label { color: var(--dl-text-2); font-size: .85rem; }
 .dl-stat--accent { background: var(--dl-accent); }
 .dl-stat--accent .dl-stat__value, .dl-stat--accent .dl-stat__label { color: var(--dl-on-accent); }
@@ -261,7 +266,7 @@ button, input, select, textarea { font-family: inherit; font-size: 1rem; }
 }
 .dl-action:active { transform: translateY(1px); }
 .dl-action__icon { font-size: 1.6rem; }
-.dl-action__title { font-weight: 750; color: var(--dl-header); font-size: 1.1rem; }
+.dl-action__title { font-weight: 750; color: var(--dl-title); font-size: 1.1rem; }
 .dl-action__desc { color: var(--dl-text-2); font-size: .9rem; }
 
 /* ---------- Tabs ---------- */
