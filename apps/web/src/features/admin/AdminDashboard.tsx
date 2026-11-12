@@ -79,21 +79,7 @@ function SectionSkeleton() {
   )
 }
 
-export interface AdminDashboardProps {
-  onNavigateGuru?: () => void
-  onNavigateKelas?: () => void
-  onNavigateMapel?: () => void
-  onNavigateJadwal?: () => void
-  onImportExcel?: () => void
-}
-
-export function AdminDashboard({
-  onNavigateGuru,
-  onNavigateKelas,
-  onNavigateMapel,
-  onNavigateJadwal,
-  onImportExcel,
-}: AdminDashboardProps) {
+export function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats['stats']>({})
   const [syncHistory, setSyncHistory] = useState<DashboardStats['recentSyncActivity']>([])
   const [loading, setLoading] = useState(true)
@@ -235,29 +221,6 @@ export function AdminDashboard({
             </header>
             <div className="dashboard-card__body">
               <p className="dashboard-placeholder">Ringkasan jadwal pelajaran hari ini akan ditampilkan di sini.</p>
-            </div>
-          </Card>
-
-          <Card className="dashboard-card">
-            <header className="dashboard-card__header">
-              <h2>Aksi Cepat</h2>
-            </header>
-            <div className="dashboard-card__body quick-actions">
-              <Button variant="primary" onClick={onNavigateGuru} disabled={!onNavigateGuru}>
-                Tambah Guru
-              </Button>
-              <Button variant="primary" onClick={onNavigateKelas} disabled={!onNavigateKelas}>
-                Tambah Kelas
-              </Button>
-              <Button variant="secondary" onClick={onNavigateMapel} disabled={!onNavigateMapel}>
-                Kelola Mata Pelajaran
-              </Button>
-              <Button variant="secondary" onClick={onImportExcel} disabled={!onImportExcel}>
-                Import Data Excel
-              </Button>
-              <Button variant="secondary" onClick={onNavigateJadwal} disabled={!onNavigateJadwal}>
-                Kelola Jadwal
-              </Button>
             </div>
           </Card>
         </div>

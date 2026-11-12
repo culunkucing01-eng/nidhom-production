@@ -1,0 +1,27 @@
+.import-modal__overlay {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; place-items: center; padding: 16px;
+  background: rgba(10, 20, 12, .5);
+  overflow-y: auto;
+}
+.import-modal { width: 100%; max-width: 540px; }
+.import-modal__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 20px 0; }
+.import-modal__title { margin: 0; font-size: 18px; color: var(--color-text); }
+.import-modal__close {
+  border: 0; background: transparent; color: var(--color-text-secondary);
+  font-size: 16px; cursor: pointer; padding: 6px 10px; border-radius: 8px;
+}
+.import-modal__close:hover { background: var(--color-surface-elevated); color: var(--color-text); }
+.import-modal__body { display: grid; gap: 14px; padding: 16px 20px 20px; }
+.import-modal__row { display: flex; flex-wrap: wrap; gap: 10px; }
+.import-modal__sheets { display: grid; gap: 12px; }
+.import-modal__error { margin: 0; font-size: 13px; color: var(--color-danger); font-weight: 600; }
+.import-modal__done { margin: 0; font-size: 13px; color: var(--color-success); font-weight: 700; }
+.import-modal__summary {
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-elevated);
+}
+.import-modal__summary-line { margin: 0; font-size: 13px; color: var(--color-text); font-weight: 600; }
+.import-modal__issues { margin: 8px 0 0; padding-left: 18px; display: grid; gap: 4px; font-size: 12px; color: var(--color-text-secondary); }

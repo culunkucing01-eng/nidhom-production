@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 
-export type AdminScreen = 'overview' | 'izin'
+export type AdminScreen = 'overview' | 'izin' | 'guru' | 'kelas' | 'mapel' | 'jadwal'
 
 export const AdminLayoutContext = createContext<{
   screen: AdminScreen
