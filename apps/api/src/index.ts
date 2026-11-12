@@ -14,15 +14,18 @@ import { applicationAuthMiddleware, type AuthEnv } from "./middleware/auth";
 
 const app = new Hono<AuthEnv>();
 
-// ── Auth (admin login) — must be before applicationAuthMiddleware ─────────────
+// Middleware auth global — WAJIB didaftarkan SEBELUM rute agar membungkusnya
+// (termasuk /auth/me & /auth/change-password). Endpoint publik di-whitelist di
+// applicationAuthMiddleware (login/logout admin & teacher, guru-list publik).
+app.use("*", applicationAuthMiddleware);
+
+// ── Auth (admin login) — dilindungi applicationAuthMiddleware (didaftarkan di atas) ─────────────
 app.route("/auth", authRoutes);
 
 // ── Teacher portal auth (name-only, no password) ──────────────────────────────
 app.route("/api/teacher", teacherAuthRoutes);
 
 // ── All other routes require an authenticated session ─────────────────────────
-app.use("*", applicationAuthMiddleware);
-
 app.route("/api/guru", guruRoutes);
 app.route("/api/kelas", kelasRoutes);
 app.route("/api/mapel", mapelRoutes);
