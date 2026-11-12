@@ -12,10 +12,10 @@
 :root[data-theme='light'] {
   color-scheme: light;
 
-  --dl-bg: #fff2b4;            /* cream lembut (default) */
-  --dl-bg-soft: #fffad6;
-  --dl-surface: #fffdf2;       /* kartu terang */
-  --dl-surface-2: #f6f0c9;
+  --dl-bg: #FFFDF4;            /* putih gading terang (default) */
+  --dl-bg-soft: #F9F6EE;       /* cream lembut */
+  --dl-surface: #FFFFFF;       /* kartu putih bersih */
+  --dl-surface-2: #F3EFE2;     /* permukaan sekunder lembut */
 
   --dl-header: #15370d;        /* hijau tua */
   --dl-header-2: #1c4a13;
@@ -31,7 +31,7 @@
 
   --dl-text: #1b2a16;
   --dl-text-2: #56694f;
-  --dl-border: #e6e0b6;
+  --dl-border: #E8E3D2;
   --dl-focus: #728e6d;
 
   --dl-success: #2e7d4f;

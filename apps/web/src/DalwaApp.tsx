@@ -118,7 +118,7 @@ export default function DalwaApp() {
   const [adminScreen, setAdminScreen] = useState<AdminScreen>('overview')
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
-  const [adminUser, setAdminUser] = useState('')
+  const [adminUser, setAdminUser] = useState('Admin')
   const [adminPass, setAdminPass] = useState('')
   const [adminLoading, setAdminLoading] = useState(false)
   const [adminError, setAdminError] = useState('')
