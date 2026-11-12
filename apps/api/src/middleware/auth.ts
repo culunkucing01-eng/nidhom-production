@@ -20,7 +20,9 @@ export interface AuthenticatedUser {
 }
 
 export interface AuthEnv {
-  Bindings: CloudflareBindings;
+  Bindings: CloudflareBindings & {
+    FRONTEND_ORIGINS: string;
+  };
   Variables: {
     authUser: AuthenticatedUser;
     sessionId: string;

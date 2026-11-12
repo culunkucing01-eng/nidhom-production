@@ -90,14 +90,29 @@ function normalizedUsername(value: unknown): string | null {
   return username;
 }
 
-function hasSameOrigin(request: Request): boolean {
+function hasSameOrigin(request: Request, allowedOrigins: string): boolean {
   const origin = request.headers.get("Origin");
   if (!origin) {
     return false;
   }
 
   try {
-    return origin === new URL(origin).origin && new URL(request.url).origin === origin;
+    if (origin !== new URL(origin).origin) {
+      return false;
+    }
+
+    if (new URL(request.url).origin === origin) {
+      return true;
+    }
+
+    return allowedOrigins.split(",").some((value) => {
+      const allowedOrigin = value.trim();
+      return (
+        allowedOrigin.length > 0 &&
+        allowedOrigin === new URL(allowedOrigin).origin &&
+        origin === allowedOrigin
+      );
+    });
   } catch {
     return false;
   }
@@ -159,7 +174,7 @@ auth.use("*", async (c, next) => {
 });
 
 auth.post("/login", async (c) => {
-  if (!hasSameOrigin(c.req.raw)) {
+  if (!hasSameOrigin(c.req.raw, c.env.FRONTEND_ORIGINS)) {
     return c.json({ error: "Forbidden" }, 403);
   }
 
@@ -322,7 +337,7 @@ auth.post("/login", async (c) => {
 });
 
 auth.post("/logout", async (c) => {
-  if (!hasSameOrigin(c.req.raw)) {
+  if (!hasSameOrigin(c.req.raw, c.env.FRONTEND_ORIGINS)) {
     clearSessionCookie(c);
     return c.json({ error: "Forbidden" }, 403);
   }
@@ -346,7 +361,7 @@ auth.get("/me", (c) => {
 });
 
 auth.post("/change-password", async (c) => {
-  if (!hasSameOrigin(c.req.raw)) {
+  if (!hasSameOrigin(c.req.raw, c.env.FRONTEND_ORIGINS)) {
     return c.json({ error: "Forbidden" }, 403);
   }
 

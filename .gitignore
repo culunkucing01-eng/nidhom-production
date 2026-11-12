@@ -33,3 +33,7 @@
 *.tmp
 *~
 .idea/
+
+# Build and lint logs (local output artifacts)
+/build-out.txt
+/lint-out.txt

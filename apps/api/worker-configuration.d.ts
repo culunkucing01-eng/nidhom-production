@@ -6,6 +6,7 @@ interface __BaseEnv_CloudflareBindings {
 	LOGIN_IP_RATE_LIMITER: RateLimit;
 	LOGIN_USERNAME_RATE_LIMITER: RateLimit;
 	ASSETS: Fetcher;
+	FRONTEND_ORIGINS: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {

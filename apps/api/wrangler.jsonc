@@ -1,0 +1,54 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "nidhom-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-04",
+
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./public"
+  },
+
+  "observability": {
+    "enabled": true
+  },
+
+  "upload_source_maps": true,
+
+  "vars": {
+    "FRONTEND_ORIGINS": "https://sistemgurumanajemen.vercel.app"
+  },
+
+  "build": {
+    "command": "node scripts/validate-production-config.mjs --wrangler-hook"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "nidhom-production",
+      "database_id": "a9540faf-320b-48df-a849-3c5ca0235ef0",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Production deployment is blocked until these are replaced with verified account IDs.
+  "ratelimits": [
+    {
+      "name": "LOGIN_IP_RATE_LIMITER",
+      "namespace_id": "REPLACE_WITH_OFFICIAL_LOGIN_IP_NAMESPACE_ID",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    },
+    {
+      "name": "LOGIN_USERNAME_RATE_LIMITER",
+      "namespace_id": "REPLACE_WITH_OFFICIAL_LOGIN_USERNAME_NAMESPACE_ID",
+      "simple": {
+        "limit": 10,
+        "period": 60
+      }
+    }
+  ]
+}
