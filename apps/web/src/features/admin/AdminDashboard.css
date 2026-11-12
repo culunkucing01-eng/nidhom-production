@@ -67,7 +67,7 @@
 }
 .stat-card__value {
   margin: 0;
-  color: var(--dl-header, #15370d);
+  color: var(--dl-title, #15370d);
   font-size: 32px;
   font-weight: 800;
   line-height: 1.05;
