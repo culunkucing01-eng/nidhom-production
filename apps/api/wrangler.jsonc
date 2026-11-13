@@ -32,23 +32,9 @@
     }
   ],
 
-  // Production deployment is blocked until these are replaced with verified account IDs.
-  "ratelimits": [
-    {
-      "name": "LOGIN_IP_RATE_LIMITER",
-      "namespace_id": "REPLACE_WITH_OFFICIAL_LOGIN_IP_NAMESPACE_ID",
-      "simple": {
-        "limit": 30,
-        "period": 60
-      }
-    },
-    {
-      "name": "LOGIN_USERNAME_RATE_LIMITER",
-      "namespace_id": "REPLACE_WITH_OFFICIAL_LOGIN_USERNAME_NAMESPACE_ID",
-      "simple": {
-        "limit": 10,
-        "period": 60
-      }
-    }
+  // Pembatasan percobaan login memakai KV Namespace (counter + TTL 60s) di auth.ts.
+  "kv_namespaces": [
+    { "binding": "LOGIN_IP_RATE_LIMITER", "id": "6d9c2f782dbc4bc3b211c2ccd432cc44" },
+    { "binding": "LOGIN_USERNAME_RATE_LIMITER", "id": "91159c2e5da5460187124f1c70772c59" }
   ]
 }

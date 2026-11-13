@@ -3,8 +3,8 @@
 // Runtime types generated with workerd@1.20261104.1 2026-11-04
 interface __BaseEnv_CloudflareBindings {
 	DB: D1Database;
-	LOGIN_IP_RATE_LIMITER: RateLimit;
-	LOGIN_USERNAME_RATE_LIMITER: RateLimit;
+	LOGIN_IP_RATE_LIMITER: KVNamespace;
+	LOGIN_USERNAME_RATE_LIMITER: KVNamespace;
 	ASSETS: Fetcher;
 	FRONTEND_ORIGINS: string;
 }

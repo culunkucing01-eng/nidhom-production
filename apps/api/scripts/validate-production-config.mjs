@@ -130,40 +130,36 @@ export function validateProductionConfig(configPath = DEFAULT_CONFIG) {
     }
   }
 
-  // Rate limiter: nama, threshold, dan namespace_id.
-  const limiters = Array.isArray(config.ratelimits) ? config.ratelimits : [];
-  if (limiters.length !== LIMITER_SPECS.length) {
-    errors.push(`Harus ada tepat ${LIMITER_SPECS.length} rate limiter (ditemukan: ${limiters.length}).`);
-  }
-  const seenIds = [];
-  for (const spec of LIMITER_SPECS) {
-    const limiter = limiters.find((entry) => entry && entry.name === spec.name);
-    if (!limiter) {
-      errors.push(`Rate limiter "${spec.name}" tidak ditemukan.`);
+  // Rate limiter login memakai KV Namespace (counter + TTL di auth.ts).
+  const kvNamespaces = Array.isArray(config.kv_namespaces) ? config.kv_namespaces : [];
+  const kvBindings = ["LOGIN_IP_RATE_LIMITER", "LOGIN_USERNAME_RATE_LIMITER"];
+  const hexId = /^[0-9a-f]{32}$/i;
+  const seenKvIds = [];
+  for (const binding of kvBindings) {
+    const ns = kvNamespaces.find((entry) => entry && entry.binding === binding);
+    if (!ns) {
+      errors.push(`KV namespace "${binding}" tidak ditemukan pada kv_namespaces.`);
       continue;
     }
-    const simple = limiter.simple ?? {};
-    if (simple.limit !== spec.limit || simple.period !== spec.period) {
+    const id = ns.id;
+    if (typeof id !== "string" || id.length === 0) {
+      errors.push(`id KV namespace "${binding}" kosong.`);
+    } else if (id.startsWith(NAMESPACE_PLACEHOLDER_PREFIX)) {
+      errors.push(`id KV namespace "${binding}" masih placeholder ("${id}").`);
+    } else if (!hexId.test(id)) {
       errors.push(
-        `Threshold "${spec.name}" harus ${spec.limit}/${spec.period} ` +
-          `(ditemukan: ${simple.limit}/${simple.period}). Jangan ubah ambang batas.`,
+        `id KV namespace "${binding}" harus 32 karakter heksadesimal (ditemukan: "${id}").`,
       );
+    } else {
+      seenKvIds.push(id.toLowerCase());
     }
-    const ns = limiter.namespace_id;
-    if (typeof ns !== "string" || ns.length === 0) {
-      errors.push(`namespace_id "${spec.name}" kosong.`);
-    } else if (ns.startsWith(NAMESPACE_PLACEHOLDER_PREFIX)) {
-      errors.push(
-        `namespace_id "${spec.name}" masih placeholder ("${ns}"). ` +
-          `Ganti dengan ID resmi dari akun Cloudflare.`,
-      );
-    } else if (!isPositiveIntegerString(ns)) {
-      errors.push(`namespace_id "${spec.name}" harus bilangan bulat positif (ditemukan: "${ns}").`);
-    }
-    if (isPositiveIntegerString(ns)) seenIds.push(ns);
   }
-  if (seenIds.length === 2 && seenIds[0] === seenIds[1]) {
-    errors.push("Kedua namespace_id rate limiter harus BERBEDA (unique).");
+  if (seenKvIds.length === 2 && seenKvIds[0] === seenKvIds[1]) {
+    errors.push("Kedua id KV namespace rate limiter harus BERBEDA (unique).");
+  }
+  // Tolak sisa konfigurasi Rate Limiting API yang lama.
+  if (Array.isArray(config.ratelimits) && config.ratelimits.length > 0) {
+    errors.push('Blok "ratelimits" (Rate Limiting API) tidak dipakai lagi. Gunakan "kv_namespaces".');
   }
 
   // Origin frontend.
@@ -197,9 +193,9 @@ function report(result, { asHook, target }) {
   console.error("\n❌ Konfigurasi produksi TIDAK valid. Build/deploy DIBATALKAN:");
   for (const error of result.errors) console.error(`   - ${error}`);
   console.error("\nLangkah perbaikan (lihat README > Deployment):");
-  console.error("   1. Buat/verifikasi 2 namespace Rate Limiting di akun Cloudflare.");
-  console.error("   2. Ganti kedua placeholder namespace_id di wrangler.jsonc dengan ID resmi (bilangan bulat positif, unik).");
-  console.error("   3. Jaga nama limiter & threshold (30/IP/60s, 10/username/60s).");
+  console.error("   1. Buat/verifikasi 2 KV Namespace di akun Cloudflare (Workers > KV).");
+  console.error('   2. Set binding LOGIN_IP_RATE_LIMITER & LOGIN_USERNAME_RATE_LIMITER di wrangler.jsonc dengan id KV resmi (32 hex, unik).');
+  console.error("   3. Jaga threshold di auth.ts (IP 30/60s, username 10/60s).");
   return 1;
 }
 

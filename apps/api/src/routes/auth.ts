@@ -118,13 +118,28 @@ function hasSameOrigin(request: Request, allowedOrigins: string): boolean {
   }
 }
 
-async function checkLoginRateLimit(binding: RateLimit, scope: string, value: string): Promise<boolean> {
+// Pembatasan percobaan login berbasis KV: counter per-key dengan TTL 60 detik.
+// Catatan: KV bersifat eventually-consistent sehingga limiter ini bersifat
+// best-effort (tidak sekuat Rate Limiting API native). Jendela 60s adalah
+// sliding window (TTL di-refresh pada setiap percobaan).
+async function checkLoginRateLimit(
+  binding: KVNamespace,
+  scope: string,
+  value: string,
+  limit: number,
+): Promise<boolean> {
   const digest = await crypto.subtle.digest("SHA-256", encoder.encode(`${scope}:${value}`));
   const key = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 
   try {
-    const outcome = await binding.limit({ key });
-    return outcome.success;
+    const raw = await binding.get(key);
+    const attempts = raw === null ? 0 : Number(raw);
+    const current = Number.isFinite(attempts) ? attempts : 0;
+    if (current >= limit) {
+      return false;
+    }
+    await binding.put(key, String(current + 1), { expirationTtl: 60 });
+    return true;
   } catch {
     throw new LoginRateLimitUnavailableError();
   }
@@ -180,7 +195,7 @@ auth.post("/login", async (c) => {
 
   const sourceIp = c.req.raw.headers.get("CF-Connecting-IP")?.trim() || "unknown";
   try {
-    if (!(await checkLoginRateLimit(c.env.LOGIN_IP_RATE_LIMITER, "ip", sourceIp))) {
+    if (!(await checkLoginRateLimit(c.env.LOGIN_IP_RATE_LIMITER, "ip", sourceIp, 30))) {
       return loginRateLimited(c);
     }
   } catch (error) {
@@ -202,6 +217,7 @@ auth.post("/login", async (c) => {
         c.env.LOGIN_USERNAME_RATE_LIMITER,
         "username",
         username.toLowerCase(),
+        10,
       ))
     ) {
       return loginRateLimited(c);

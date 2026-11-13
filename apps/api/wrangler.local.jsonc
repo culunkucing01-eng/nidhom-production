@@ -23,5 +23,10 @@
       "database_name": "nidhom-api-local",
       "migrations_dir": "migrations"
     }
+  ],
+
+  "kv_namespaces": [
+    { "binding": "LOGIN_IP_RATE_LIMITER" },
+    { "binding": "LOGIN_USERNAME_RATE_LIMITER" }
   ]
 }
