@@ -30,7 +30,7 @@
   color: var(--color-danger);
   font-size: 13px;
 }
-.entity-table__wrapper { overflow-x: auto; border: 1px solid var(--color-border); border-radius: 14px; }
+.entity-table__wrapper { max-height: 60vh; overflow: auto; border: 1px solid var(--color-border); border-radius: 14px; }
 .entity-table { width: 100%; border-collapse: collapse; min-width: 340px; }
 .entity-table th, .entity-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--color-border); font-size: 14px; }
 .entity-table th { background: var(--color-surface-elevated); color: var(--color-text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
@@ -45,3 +45,15 @@
 .entity-modal__form { display: grid; gap: 14px; margin-top: 14px; }
 .entity-modal__error { margin: 0; font-size: 13px; color: var(--color-danger); font-weight: 600; }
 .entity-modal__actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+.entity-table thead th { position: sticky; top: 0; z-index: 1; }
+.entity-table__actions-col { width: 1%; white-space: nowrap; }
+.entity-table__actions { white-space: nowrap; }
+.entity-table__actions .button { min-height: 34px; padding: 0 12px; font-size: 13px; border-radius: 9px; }
+.entity-table__actions .button + .button { margin-left: 8px; }
+.entity-pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.entity-pagination__info { font-size: 13px; color: var(--color-text-secondary); }
+.entity-pagination__controls { display: flex; gap: 8px; }
+.entity-pagination__controls .button { min-height: 40px; }
+.entity-modal--confirm { max-width: 420px; }
+.entity-modal__confirm-text { margin: 8px 0 0; font-size: 14px; color: var(--color-text-secondary); }

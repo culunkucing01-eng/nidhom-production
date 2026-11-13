@@ -361,4 +361,28 @@ kelasRoutes.patch("/:id/status", async (c) => {
   }
 });
 
+kelasRoutes.delete("/:id", async (c) => {
+  if (!isAdmin(c)) {
+    return c.json({ error: "Akses hanya untuk administrator." }, 403);
+  }
+
+  const id = c.req.param("id");
+  if (!isValidId(id)) {
+    return c.json({ error: "Kelas tidak ditemukan." }, 404);
+  }
+
+  try {
+    const result = await c.env.DB.prepare("DELETE FROM kelas WHERE id = ?").bind(id).run();
+    if (result.meta.changes === 0) {
+      return c.json({ error: "Kelas tidak ditemukan." }, 404);
+    }
+    return c.json({ ok: true });
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("FOREIGN KEY constraint failed")) {
+      return c.json({ error: "Kelas tidak dapat dihapus karena masih memiliki jadwal aktif." }, 409);
+    }
+    return databaseFailure(c, "delete");
+  }
+});
+
 export default kelasRoutes;

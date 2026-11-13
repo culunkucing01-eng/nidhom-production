@@ -270,6 +270,179 @@ jadwalRoutes.get("/:id", async (c) => {
   }
 });
 
+interface JadwalBody {
+  kelas_id: string;
+  guru_id: string;
+  mata_pelajaran_id: string;
+  day_index: number;
+  period: number;
+}
+
+function validateJadwalBody(body: Record<string, unknown> | null): {
+  value: JadwalBody | null;
+  errors: Record<string, string>;
+} {
+  const errors: Record<string, string> = {};
+  const kelas_id = typeof body?.kelas_id === "string" ? body.kelas_id.trim() : "";
+  const guru_id = typeof body?.guru_id === "string" ? body.guru_id.trim() : "";
+  const mata_pelajaran_id =
+    typeof body?.mata_pelajaran_id === "string" ? body.mata_pelajaran_id.trim() : "";
+  const dayRaw = typeof body?.day_index === "number" ? body.day_index : Number(body?.day_index);
+  const periodRaw = typeof body?.period === "number" ? body.period : Number(body?.period);
+
+  if (!kelas_id) errors.kelas_id = "Kelas wajib dipilih.";
+  if (!guru_id) errors.guru_id = "Guru wajib dipilih.";
+  if (!mata_pelajaran_id) errors.mata_pelajaran_id = "Mata pelajaran wajib dipilih.";
+  if (!Number.isInteger(dayRaw) || dayRaw < 0 || dayRaw > 5) {
+    errors.day_index = "Hari tidak valid.";
+  }
+  if (!Number.isInteger(periodRaw) || periodRaw < 1 || periodRaw > 4) {
+    errors.period = "Periode harus antara 1 sampai 4.";
+  }
+
+  const valid =
+    kelas_id && guru_id && mata_pelajaran_id && Object.keys(errors).length === 0;
+  return {
+    value: valid ? { kelas_id, guru_id, mata_pelajaran_id, day_index: dayRaw, period: periodRaw } : null,
+    errors,
+  };
+}
+
+function jadwalSlotConflict(error: unknown): { error: string } | null {
+  if (!(error instanceof Error) || !error.message.includes("UNIQUE constraint failed")) {
+    return null;
+  }
+  if (error.message.includes("guru_id")) {
+    return { error: "Guru sudah mengajar pada hari dan periode tersebut." };
+  }
+  return { error: "Kelas sudah memiliki pelajaran pada hari dan periode tersebut." };
+}
+
+jadwalRoutes.post("/", async (c) => {
+  if (c.get("authUser").role !== "ADMIN") {
+    return c.json({ error: "Akses hanya untuk administrator." }, 403);
+  }
+
+  const validated = validateJadwalBody(await readBody(c.req.raw));
+  if (!validated.value) {
+    return c.json({ error: "Data jadwal tidak valid.", fields: validated.errors }, 400);
+  }
+
+  const id = crypto.randomUUID();
+  try {
+    await c.env.DB.prepare(
+      `INSERT INTO jadwal (id, kelas_id, guru_id, mata_pelajaran_id, day_index, period)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+    )
+      .bind(
+        id,
+        validated.value.kelas_id,
+        validated.value.guru_id,
+        validated.value.mata_pelajaran_id,
+        validated.value.day_index,
+        validated.value.period,
+      )
+      .run();
+
+    const row = await c.env.DB.prepare(
+      `SELECT ${SELECT_COLUMNS} FROM jadwal j
+       JOIN guru g ON g.id = j.guru_id
+       JOIN kelas k ON k.id = j.kelas_id
+       JOIN mata_pelajaran m ON m.id = j.mata_pelajaran_id
+       WHERE j.id = ? LIMIT 1`,
+    )
+      .bind(id)
+      .first<JadwalRow>();
+    return row ? c.json({ data: row }, 201) : c.json({ error: "Jadwal tidak dapat dimuat." }, 500);
+  } catch (error) {
+    const conflict = jadwalSlotConflict(error);
+    if (conflict) return c.json(conflict, 409);
+    if (error instanceof Error && error.message.includes("FOREIGN KEY constraint failed")) {
+      return c.json({ error: "Kelas, guru, atau mata pelajaran tidak valid." }, 400);
+    }
+    console.error("Jadwal create failed.");
+    return c.json({ error: "Jadwal belum dapat disimpan." }, 500);
+  }
+});
+
+jadwalRoutes.put("/:id", async (c) => {
+  if (c.get("authUser").role !== "ADMIN") {
+    return c.json({ error: "Akses hanya untuk administrator." }, 403);
+  }
+
+  const id = c.req.param("id");
+  if (!isValidId(id)) {
+    return c.json({ error: "Jadwal tidak ditemukan." }, 404);
+  }
+  const validated = validateJadwalBody(await readBody(c.req.raw));
+  if (!validated.value) {
+    return c.json({ error: "Data jadwal tidak valid.", fields: validated.errors }, 400);
+  }
+
+  try {
+    const existing = await c.env.DB.prepare("SELECT id FROM jadwal WHERE id = ? LIMIT 1")
+      .bind(id)
+      .first<{ id: string }>();
+    if (!existing) {
+      return c.json({ error: "Jadwal tidak ditemukan." }, 404);
+    }
+
+    await c.env.DB.prepare(
+      `UPDATE jadwal
+       SET kelas_id = ?, guru_id = ?, mata_pelajaran_id = ?, day_index = ?, period = ?,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+    )
+      .bind(
+        validated.value.kelas_id,
+        validated.value.guru_id,
+        validated.value.mata_pelajaran_id,
+        validated.value.day_index,
+        validated.value.period,
+        id,
+      )
+      .run();
+
+    const row = await c.env.DB.prepare(
+      `SELECT ${SELECT_COLUMNS} FROM jadwal j
+       JOIN guru g ON g.id = j.guru_id
+       JOIN kelas k ON k.id = j.kelas_id
+       JOIN mata_pelajaran m ON m.id = j.mata_pelajaran_id
+       WHERE j.id = ? LIMIT 1`,
+    )
+      .bind(id)
+      .first<JadwalRow>();
+    return row ? c.json({ data: row }) : c.json({ error: "Jadwal tidak dapat dimuat." }, 500);
+  } catch (error) {
+    const conflict = jadwalSlotConflict(error);
+    if (conflict) return c.json(conflict, 409);
+    console.error("Jadwal update failed.");
+    return c.json({ error: "Jadwal belum dapat diperbarui." }, 500);
+  }
+});
+
+jadwalRoutes.delete("/:id", async (c) => {
+  if (c.get("authUser").role !== "ADMIN") {
+    return c.json({ error: "Akses hanya untuk administrator." }, 403);
+  }
+
+  const id = c.req.param("id");
+  if (!isValidId(id)) {
+    return c.json({ error: "Jadwal tidak ditemukan." }, 404);
+  }
+
+  try {
+    const result = await c.env.DB.prepare("DELETE FROM jadwal WHERE id = ?").bind(id).run();
+    if (result.meta.changes === 0) {
+      return c.json({ error: "Jadwal tidak ditemukan." }, 404);
+    }
+    return c.json({ ok: true });
+  } catch {
+    console.error("Jadwal delete failed.");
+    return c.json({ error: "Jadwal belum dapat dihapus." }, 500);
+  }
+});
+
 export default jadwalRoutes;
 
 

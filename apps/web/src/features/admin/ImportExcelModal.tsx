@@ -1,9 +1,11 @@
 import { useState, type ChangeEvent } from 'react'
 import { Button, Card } from '../../components/ui'
 import {
+  commitAllImport,
   commitImport,
   inspectImport,
   validateImport,
+  type CommitAllResponse,
   type ImportSheetPreview,
   type PlanResponse,
 } from '../../lib/importApi'
@@ -18,7 +20,7 @@ const ENTITY_OPTIONS = [
   { value: 'absen', label: 'Absen' },
 ]
 
-type Phase = 'idle' | 'inspect' | 'validate' | 'commit'
+type Phase = 'idle' | 'inspect' | 'validate' | 'commit' | 'all'
 
 interface ImportExcelModalProps {
   onClose: () => void
@@ -35,6 +37,7 @@ export function ImportExcelModal({ onClose, onImported }: ImportExcelModalProps)
   const [error, setError] = useState<string | null>(null)
   const [plan, setPlan] = useState<PlanResponse | null>(null)
   const [done, setDone] = useState<string | null>(null)
+  const [allResult, setAllResult] = useState<CommitAllResponse['sheets'] | null>(null)
 
   const busy = phase !== 'idle'
 
@@ -105,6 +108,23 @@ export function ImportExcelModal({ onClose, onImported }: ImportExcelModalProps)
     }
   }
 
+  async function importAll() {
+    if (!file) return
+    setPhase('all')
+    setError(null)
+    setDone(null)
+    setAllResult(null)
+    try {
+      const result = await commitAllImport(file)
+      setAllResult(result.sheets)
+      onImported?.()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Gagal mengimpor semua sheet.')
+    } finally {
+      setPhase('idle')
+    }
+  }
+
   return (
     <div
       className="import-modal__overlay"
@@ -148,6 +168,31 @@ export function ImportExcelModal({ onClose, onImported }: ImportExcelModalProps)
               Periksa File
             </Button>
           </div>
+
+          <div className="import-modal__row">
+            <Button
+              disabled={!file || busy}
+              loading={phase === 'all'}
+              onClick={importAll}
+              type="button"
+              variant="primary"
+            >
+              Impor Semua Sheet Sekaligus
+            </Button>
+          </div>
+
+          {allResult && (
+            <div className="import-modal__summary">
+              <p className="import-modal__summary-line">Hasil impor semua sheet:</p>
+              <ul className="import-modal__issues">
+                {allResult.map((sheet) => (
+                  <li key={sheet.sheet}>
+                    {sheet.sheet} ({sheet.entityType}) — total {sheet.summary.totalRows}: {sheet.summary.inserted} baru, {sheet.summary.updated} diperbarui, {sheet.summary.duplicates} duplikat, {sheet.summary.failed} gagal
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {sheets.length > 0 && (
             <div className="import-modal__sheets">

@@ -121,3 +121,7 @@ export function updateMapelStatus(id: string, isActive: boolean) {
     body: JSON.stringify({ isActive }),
   })
 }
+
+export function deleteMapel(id: string) {
+  return request<{ ok: boolean }>(`/api/mapel/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}

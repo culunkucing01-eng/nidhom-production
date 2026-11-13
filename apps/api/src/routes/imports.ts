@@ -1139,6 +1139,88 @@ imports.post("/commit", async (c) => {
   }
 });
 
+// Impor multi-sheet: baca seluruh sheet terdeteksi (Guru, Kelas, Mapel, Jadwal,
+// Pengaturan, dst.) dalam satu permintaan. Sheet master di-commit lebih dulu,
+// lalu sheet bergantung (Jadwal) agar relasi guru/kelas/mapel ter-resolve.
+// Setiap fase adalah satu DB.batch (atomik); upsert aman dari duplikasi.
+imports.post("/commit-all", async (c) => {
+  try {
+    const upload = await readUpload(c);
+    const previews = inspectWorkbook(upload.workbook);
+    const uploadedBy = c.get("authUser").id;
+
+    const order: ImportEntityType[] = [
+      "guru",
+      "kelas",
+      "mapel",
+      "pengaturan",
+      "perizinan",
+      "absen",
+      "loghapus",
+      "jadwal",
+    ];
+
+    const targets = previews
+      .filter((preview) => !preview.hidden && isImportEntityType(preview.suggestedEntityType))
+      .map((preview) => ({
+        sheetName: preview.name,
+        entityType: preview.suggestedEntityType as ImportEntityType,
+        mapping: preview.suggestedMapping,
+      }))
+      .sort((a, b) => order.indexOf(a.entityType) - order.indexOf(b.entityType));
+
+    if (targets.length === 0) {
+      return c.json({ error: "Tidak ada sheet yang dikenali untuk diimpor." }, 400);
+    }
+
+    const results: Array<{ sheet: string; entityType: ImportEntityType; summary: ImportSummary }> = [];
+    let phaseStatements: ReturnType<typeof prepareWriteStatements> = [];
+
+    async function flush() {
+      if (phaseStatements.length === 0) return;
+      await c.env.DB.batch(phaseStatements);
+      phaseStatements = [];
+    }
+
+    for (const target of targets) {
+      // Commit master sebelum merencanakan sheet bergantung (Jadwal).
+      if (target.entityType === "jadwal") {
+        await flush();
+      }
+      const plan = await makePlan(
+        c.env.DB,
+        upload.workbook,
+        target.sheetName,
+        target.entityType,
+        target.mapping,
+      );
+      const sheetRunId = crypto.randomUUID();
+      phaseStatements.push(
+        ...prepareWriteStatements(
+          c.env.DB,
+          plan,
+          sheetRunId,
+          uploadedBy,
+          upload.fileName,
+          upload.fileHash,
+          target.sheetName,
+        ),
+      );
+      results.push({ sheet: target.sheetName, entityType: target.entityType, summary: plan.summary });
+    }
+
+    await flush();
+
+    return c.json({ sheets: results }, 201);
+  } catch (error: unknown) {
+    if (error instanceof ExcelImportError) {
+      return c.json({ error: error.message, code: error.code }, error.status as 400);
+    }
+    console.error("Multi-sheet Excel import failed.");
+    return c.json({ error: "Impor gagal. Data master yang sudah diproses tersimpan; perbaiki konflik lalu coba lagi." }, 500);
+  }
+});
+
 imports.get("/", async (c) => {
   const page = parsePage(c.req.query("page"), 1);
   const perPage = parsePage(c.req.query("per_page"), 20);

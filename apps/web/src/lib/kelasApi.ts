@@ -113,3 +113,7 @@ export function updateKelasStatus(id: string, isActive: boolean) {
     body: JSON.stringify({ isActive }),
   })
 }
+
+export function deleteKelas(id: string) {
+  return request<{ ok: boolean }>(`/api/kelas/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}

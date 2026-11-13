@@ -117,3 +117,7 @@ export function updateGuruStatus(id: string, isActive: boolean) {
     body: JSON.stringify({ isActive }),
   })
 }
+
+export function deleteGuru(id: string) {
+  return request<{ ok: boolean }>(`/api/guru/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
