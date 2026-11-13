@@ -19,9 +19,10 @@ import type { AdminScreen } from './features/admin/AdminLayoutContext'
 import { RekapitulasiPage } from './features/rekapitulasi/RekapitulasiPage'
 import { EntityManager, type EntityColumn, type EntityField } from './features/admin/EntityManager'
 import { ImportExcelModal } from './features/admin/ImportExcelModal'
-import { createGuru, listGuru } from './lib/guruApi'
-import { createKelas, listKelas } from './lib/kelasApi'
-import { createMapel, listMapel } from './features/mapel/mapelApi'
+import { JadwalManager } from './features/admin/JadwalManager'
+import { createGuru, deleteGuru, listGuru, updateGuru } from './lib/guruApi'
+import { createKelas, deleteKelas, listKelas, updateKelas } from './lib/kelasApi'
+import { createMapel, deleteMapel, listMapel, updateMapel } from './features/mapel/mapelApi'
 import './styles/earthy.css'
 
 /* Konfigurasi manajemen entitas (daftar + tambah) untuk aksi cepat sidebar admin */
@@ -51,26 +52,44 @@ const mapelFields: EntityField[] = [
   { name: 'nama_indo', label: 'Nama Indonesia (opsional)', placeholder: 'Al-Quran' },
 ]
 
-async function loadGuru() {
-  const response = await listGuru({ page: 1, perPage: 50, q: '', status: 'all' })
-  return response.data as unknown as Record<string, unknown>[]
+async function loadGuru(params: { page: number; perPage: number }) {
+  const response = await listGuru({ page: params.page, perPage: params.perPage, q: '', status: 'all' })
+  return { rows: response.data as unknown as Record<string, unknown>[], total: response.pagination.total }
 }
 async function createGuruItem(values: Record<string, string>) {
   await createGuru({ kode: values.kode ?? '', nama: values.nama ?? '' })
 }
-async function loadKelas() {
-  const response = await listKelas({ page: 1, perPage: 50, q: '', status: 'all' })
-  return response.data as unknown as Record<string, unknown>[]
+async function updateGuruItem(id: string, values: Record<string, string>) {
+  await updateGuru(id, { kode: values.kode ?? '', nama: values.nama ?? '' })
+}
+async function deleteGuruItem(id: string) {
+  await deleteGuru(id)
+}
+async function loadKelas(params: { page: number; perPage: number }) {
+  const response = await listKelas({ page: params.page, perPage: params.perPage, q: '', status: 'all' })
+  return { rows: response.data as unknown as Record<string, unknown>[], total: response.pagination.total }
 }
 async function createKelasItem(values: Record<string, string>) {
   await createKelas({ nama: values.nama ?? '' })
 }
-async function loadMapel() {
-  const response = await listMapel({ page: 1, perPage: 50, q: '', status: 'all' })
-  return response.data as unknown as Record<string, unknown>[]
+async function updateKelasItem(id: string, values: Record<string, string>) {
+  await updateKelas(id, { nama: values.nama ?? '' })
+}
+async function deleteKelasItem(id: string) {
+  await deleteKelas(id)
+}
+async function loadMapel(params: { page: number; perPage: number }) {
+  const response = await listMapel({ page: params.page, perPage: params.perPage, q: '', status: 'all' })
+  return { rows: response.data as unknown as Record<string, unknown>[], total: response.pagination.total }
 }
 async function createMapelItem(values: Record<string, string>) {
   await createMapel({ nama_arab: values.nama_arab ?? '', nama_indo: values.nama_indo ? values.nama_indo : null })
+}
+async function updateMapelItem(id: string, values: Record<string, string>) {
+  await updateMapel(id, { nama_arab: values.nama_arab ?? '', nama_indo: values.nama_indo ? values.nama_indo : null })
+}
+async function deleteMapelItem(id: string) {
+  await deleteMapel(id)
 }
 
 type Screen =
@@ -465,6 +484,8 @@ export default function DalwaApp() {
           fields={guruFields}
           load={loadGuru}
           create={createGuruItem}
+          update={updateGuruItem}
+          remove={deleteGuruItem}
         />
       )}
       {adminScreen === 'kelas' && (
@@ -476,6 +497,8 @@ export default function DalwaApp() {
           fields={kelasFields}
           load={loadKelas}
           create={createKelasItem}
+          update={updateKelasItem}
+          remove={deleteKelasItem}
         />
       )}
       {adminScreen === 'mapel' && (
@@ -487,20 +510,11 @@ export default function DalwaApp() {
           fields={mapelFields}
           load={loadMapel}
           create={createMapelItem}
+          update={updateMapelItem}
+          remove={deleteMapelItem}
         />
       )}
-      {adminScreen === 'jadwal' && (
-        <Card className="dashboard-card">
-          <header className="dashboard-card__header">
-            <h2>Kelola Jadwal</h2>
-          </header>
-          <div className="dashboard-card__body">
-            <p className="dashboard-placeholder">
-              Manajemen jadwal pelajaran akan tersedia di sini. Gunakan Impor Excel (jenis "Jadwal") untuk memasukkan jadwal.
-            </p>
-          </div>
-        </Card>
-      )}
+      {adminScreen === 'jadwal' && <JadwalManager />}
       {importOpen && <ImportExcelModal onClose={() => setImportOpen(false)} />}
     </AdminLayout>
   )

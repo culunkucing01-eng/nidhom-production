@@ -265,6 +265,23 @@ export async function getJadwalTimetable(): Promise<{ days: string[]; periods: n
   return apiJson<{ days: string[]; periods: number[]; grid: Record<string, Record<string, unknown>>; count: number }>('/api/jadwal/timetable')
 }
 
+export interface JadwalInput {
+  kelas_id: string
+  guru_id: string
+  mata_pelajaran_id: string
+  day_index: number
+  period: number
+}
+export async function createJadwal(input: JadwalInput): Promise<{ data: JadwalItem }> {
+  return apiJson<{ data: JadwalItem }>('/api/jadwal', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) })
+}
+export async function updateJadwal(id: string, input: JadwalInput): Promise<{ data: JadwalItem }> {
+  return apiJson<{ data: JadwalItem }>(`/api/jadwal/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(input) })
+}
+export async function deleteJadwal(id: string): Promise<{ ok: boolean }> {
+  return apiJson<{ ok: boolean }>(`/api/jadwal/${encodeURIComponent(id)}`, { method: 'DELETE' })
+}
+
 // ── Absen ───────────────────────────────────────────────────────────────────────
 export interface AbsenRecord {
   id: string

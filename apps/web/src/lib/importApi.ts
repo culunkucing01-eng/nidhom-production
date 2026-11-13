@@ -35,6 +35,16 @@ export interface PlanResponse {
   issues: ImportIssue[]
 }
 
+export interface CommitAllResponse {
+  sheets: Array<{ sheet: string; entityType: string; summary: ImportSummary }>
+}
+
+export async function commitAllImport(file: File): Promise<CommitAllResponse> {
+  const form = new FormData()
+  form.append('file', file)
+  return (await postForm('/api/imports/commit-all', form)) as CommitAllResponse
+}
+
 function errorFromBody(body: unknown, status: number): Error {
   if (body && typeof body === 'object' && 'error' in body) {
     const message = (body as { error?: unknown }).error

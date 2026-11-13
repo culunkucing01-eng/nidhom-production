@@ -1,0 +1,4 @@
+.jadwal-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) {
+  .jadwal-form__row { grid-template-columns: 1fr; }
+}
