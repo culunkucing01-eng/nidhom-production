@@ -16,7 +16,7 @@
   "upload_source_maps": true,
 
   "vars": {
-    "FRONTEND_ORIGINS": "https://sistemgurumanajemen.vercel.app"
+    "FRONTEND_ORIGINS": "https://sistemgurumanajemen.vercel.app,https://nidhom-production.vercel.app,https://*.vercel.app"
   },
 
   "build": {

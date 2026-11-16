@@ -137,4 +137,19 @@ ditemukan (jangan dieksekusi).
   `npm run lint` lulus tanpa error. `apps/api` dan `apps/web/vercel.json` tidak
   tersentuh.
 
+- 2026-11-16 (fix 403 origin login lintas-domain): setelah rewrite Vercel aktif,
+  `POST /auth/login` dari `https://nidhom-production.vercel.app` diteruskan ke
+  Worker namun ditolak 403 oleh `hasSameOrigin` (`routes/auth.ts`) karena
+  `FRONTEND_ORIGINS` hanya memuat `https://sistemgurumanajemen.vercel.app`.
+  Perbaikan: (1) perluas `FRONTEND_ORIGINS` di `wrangler.jsonc` menjadi daftar
+  `https://sistemgurumanajemen.vercel.app,https://nidhom-production.vercel.app,
+  https://*.vercel.app`; (2) jadikan `hasSameOrigin` sadar-wildcard subdomain
+  (`https://*.vercel.app` mencocokkan domain produksi & preview) via helper
+  `isAllowedOrigin`, tetap menolak origin non-https/asing dan aman saat
+  `FRONTEND_ORIGINS` tidak diset (dev lokal). Verifikasi: validator konfigurasi
+  produksi exit 0; `test:deployment-guards` 20/20 lulus; `tsc --noEmit` bersih
+  untuk `auth.ts`; deploy `npx wrangler deploy` sukses (version 7321e391); uji
+  end-to-end — Origin nidhom-production.vercel.app -> 400 (lolos origin, bukan
+  403), Origin asing -> 403 (tetap ditolak). Tidak ada perubahan skema DB/endpoint.
+
   (`/api/imports/inspect`, `/api/imports/commit-all`) terverifikasi di D1 lokal.
