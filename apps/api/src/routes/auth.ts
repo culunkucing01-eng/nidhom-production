@@ -90,7 +90,46 @@ function normalizedUsername(value: unknown): string | null {
   return username;
 }
 
-function hasSameOrigin(request: Request, allowedOrigins: string): boolean {
+function isAllowedOrigin(origin: string, allowedOrigins: string | undefined): boolean {
+  const entries =
+    typeof allowedOrigins === "string"
+      ? allowedOrigins
+          .split(",")
+          .map((value) => value.trim())
+          .filter((value) => value.length > 0)
+      : [];
+
+  for (const entry of entries) {
+    // Entri wildcard subdomain, mis. https://*.vercel.app — mencocokkan
+    // https://nidhom-production.vercel.app dan https://<preview>.vercel.app.
+    if (entry.startsWith("https://*.")) {
+      const suffix = entry.slice("https://*.".length);
+      if (suffix.length === 0 || suffix.includes("/") || suffix.includes(":")) continue;
+      const host = origin.slice("https://".length);
+      if (
+        origin.startsWith("https://") &&
+        host.endsWith(`.${suffix}`) &&
+        host.length > suffix.length + 1 &&
+        !host.includes(":")
+      ) {
+        return true;
+      }
+      continue;
+    }
+
+    // Entri origin persis (harus URL https kanonik).
+    if (entry.startsWith("https://")) {
+      try {
+        if (new URL(entry).origin === origin) return true;
+      } catch {
+        // Entri tidak valid diabaikan.
+      }
+    }
+  }
+  return false;
+}
+
+function hasSameOrigin(request: Request, allowedOrigins: string | undefined): boolean {
   const origin = request.headers.get("Origin");
   if (!origin) {
     return false;
@@ -105,14 +144,7 @@ function hasSameOrigin(request: Request, allowedOrigins: string): boolean {
       return true;
     }
 
-    return allowedOrigins.split(",").some((value) => {
-      const allowedOrigin = value.trim();
-      return (
-        allowedOrigin.length > 0 &&
-        allowedOrigin === new URL(allowedOrigin).origin &&
-        origin === allowedOrigin
-      );
-    });
+    return isAllowedOrigin(origin, allowedOrigins);
   } catch {
     return false;
   }
