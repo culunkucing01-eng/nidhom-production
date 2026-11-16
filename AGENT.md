@@ -126,4 +126,15 @@ ditemukan (jangan dieksekusi).
   (same-origin), CORS tidak terlibat; tidak ada perubahan kode `apps/api`.
 
   exit 0; server dev lokal, login admin, dan impor multi-sheet
+- 2026-11-16 (retouch UI/UX frontend): penyegaran visual menyeluruh di `apps/web`
+  tanpa mengubah logika bisnis, routing, maupun endpoint API. Palet tema di
+  `styles/earthy.css` disempurnakan (token `--dl-brand` hijau zamrud untuk tombol
+  utama/fokus/indikator aktif; dark mode slate-950 lebih dalam, light mode
+  off-white + border/shadow lembut). Halaman login admin diberi latar gradien +
+  pola dot + card glassmorphism + ikon di dalam input; alert error modern berikon;
+  tabel (header uppercase, zebra striping, hover row), badge pill, dan indikator
+  menu aktif sidebar berbentuk pill. Verifikasi: `npm run build` (tsc + vite) dan
+  `npm run lint` lulus tanpa error. `apps/api` dan `apps/web/vercel.json` tidak
+  tersentuh.
+
   (`/api/imports/inspect`, `/api/imports/commit-all`) terverifikasi di D1 lokal.
