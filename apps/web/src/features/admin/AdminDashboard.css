@@ -52,8 +52,8 @@
   width: 46px;
   height: 46px;
   border-radius: 14px;
-  background: rgba(114, 142, 109, 0.14);
-  color: var(--dl-sage-strong, #5c7758);
+  background: var(--dl-brand-soft, rgba(114, 142, 109, 0.14));
+  color: var(--dl-brand, #5c7758);
 }
 .stat-card__icon svg { display: block; width: 24px; height: 24px; }
 .stat-card__content { display: grid; gap: 4px; }

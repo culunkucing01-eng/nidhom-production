@@ -311,22 +311,31 @@ export default function DalwaApp() {
   if (!user) {
     if (screen === 'admin-login') {
       return (
-        <div className="dl-app">
-          <main className="dl-container dl-stack">
+        <div className="dl-app dl-login">
+          <div className="dl-login__pattern" aria-hidden="true" />
+          <main className="dl-container dl-stack dl-login__main">
             <div className="dl-row">
               <Button onClick={() => setScreen('landing')} variant="ghost">
                 ← Kembali
               </Button>
             </div>
-            <Card title="Masuk Admin">
+            <Card title="Masuk ke Nidhom" className="dl-login-card">
               <form className="dl-form" noValidate onSubmit={handleAdminLogin}>
-                <Input
-                  autoComplete="username"
-                  id="admin-username"
-                  label="Nama pengguna"
-                  onChange={(e) => setAdminUser(e.target.value)}
-                  value={adminUser}
-                />
+                <div className="dl-input-icon">
+                  <Input
+                    autoComplete="username"
+                    id="admin-username"
+                    label="Nama pengguna"
+                    onChange={(e) => setAdminUser(e.target.value)}
+                    value={adminUser}
+                  />
+                  <span className="dl-input-icon__mark" aria-hidden="true">
+                    <svg fill="none" height="18" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" width="18">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </span>
+                </div>
                 <PasswordField
                   autoComplete="current-password"
                   id="admin-password"
