@@ -7,6 +7,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://nidhom-api.culunkucing01.workers.dev/api/:path*"
+    },
+    {
+      "source": "/((?!auth/|api/).*)",
+      "destination": "/index.html"
     }
   ]
 }

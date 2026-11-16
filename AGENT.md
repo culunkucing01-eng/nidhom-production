@@ -62,9 +62,10 @@ beserta indeks dan constraint.
 - Guru: login berbasis nama lewat `POST /api/teacher/login` (field `guru_id`),
   peran `TEACHER`. Tersedia juga alur akses guru mandiri.
 - Cookie sesi: `nidhom_session` (`httpOnly`, `secure`, `sameSite=Lax`).
-- Rate limiter (`LOGIN_IP_RATE_LIMIT`, `LOGIN_USERNAME_RATE_LIMITER`) masih
-  bernilai placeholder `REPLACE_WITH_...`; harus diganti dengan ID namespace
-  Cloudflare yang terverifikasi sebelum deploy produksi.
+- Rate limiter login berbasis KV (`LOGIN_IP_RATE_LIMITER`,
+  `LOGIN_USERNAME_RATE_LIMITER`) memakai id namespace 32-hex pada
+  `wrangler.jsonc`; verifikasi ulang ID di akun Cloudflare tujuan sebelum deploy
+  produksi. Threshold: IP 30/60s, username 10/60s.
 - Kontrol peran eksplisit (`ADMIN` / `LEADERSHIP` / `TEACHER`); balas `403`
   bila peran tidak sesuai.
 
@@ -114,3 +115,15 @@ ditemukan (jangan dieksekusi).
   izin mandiri, rekapitulasi), design token CSS, ganti tema.
 - Tertunda: verifikasi & penggantian namespace rate-limit produksi; deploy
   produksi; kelengkapan UI admin lanjutan.
+- 2026-11-16 (health check): `test:deployment-guards` disesuaikan ke skema
+  `kv_namespaces` hasil migrasi KV (20/20 lulus); validator konfigurasi produksi
+- 2026-11-16 (fix konektivitas frontend→backend): pindahkan konfigurasi rewrite
+  Vercel dari `vercel.json` root ke `apps/web/vercel.json` agar terbaca saat
+  Root Directory = `apps/web`. Rewrite `/auth/*` dan `/api/*` meneruskan request
+  ke `https://nidhom-api.culunkucing01.workers.dev` (path cocok dengan router
+  `apps/api`: `/auth` = login admin, `/api/*` = sisanya), plus SPA fallback
+  `/(.*) -> /index.html` di urutan terakhir. Karena memakai proxy rewrite
+  (same-origin), CORS tidak terlibat; tidak ada perubahan kode `apps/api`.
+
+  exit 0; server dev lokal, login admin, dan impor multi-sheet
+  (`/api/imports/inspect`, `/api/imports/commit-all`) terverifikasi di D1 lokal.
