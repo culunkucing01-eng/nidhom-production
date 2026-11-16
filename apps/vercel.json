@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/auth/:path*",
+      "destination": "https://nidhom-api.culunkucing01.workers.dev/auth/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "https://nidhom-api.culunkucing01.workers.dev/api/:path*"
+    }
+  ]
+}
