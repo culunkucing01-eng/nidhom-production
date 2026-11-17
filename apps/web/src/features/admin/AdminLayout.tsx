@@ -1,5 +1,6 @@
 import { useContext, type ReactNode } from 'react'
 import { Button, ThemeToggle, type Theme } from '../../components/ui'
+import { MuteButton } from '../../components/ui/MuteButton'
 import type { AuthenticatedUser } from '../../lib/api'
 import { AdminLayoutContext, type AdminScreen } from './AdminLayoutContext'
 import './AdminLayout.css'
@@ -157,6 +158,7 @@ function AdminLayoutShell({
             <h1 className="admin-header__title">{screenTitles[screen]}</h1>
           </div>
           <div className="admin-header__actions">
+            <MuteButton />
             <div className="admin-header__user">{user.username}</div>
             <ThemeToggle onToggle={onToggleTheme} theme={theme} />
             <Button loading={logoutLoading} onClick={onLogout} variant="secondary">

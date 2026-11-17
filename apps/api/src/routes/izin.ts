@@ -7,6 +7,8 @@ interface IzinRow {
   decided_at: string | null; decision_notes: string | null;
   created_at: string; updated_at: string;
   guru_kode: string | null; guru_nama: string | null; admin_username: string | null;
+  kelas_id: string | null; mata_pelajaran_id: string | null; jam_terdampak: string | null;
+  guru_pengganti_id: string | null; guru_pengganti_nama: string | null;
 }
 
 const MAX_PAGE_SIZE = 100;
@@ -46,13 +48,15 @@ izinRoutes.get("/me", async (c) => {
   if (page === null || perPage === null || perPage > MAX_PAGE_SIZE) return c.json({ error: "Parameter halaman tidak valid." }, 400);
   const statusFilter = typeof c.req.query("status") === "string" ? c.req.query("status")!.trim() : "";
 
+  const guruId = user.teacher?.id;
+  if (!guruId) return c.json({ error: "Identitas guru tidak tersedia." }, 403);
   const clauses: string[] = ["ip.guru_id = ?"];
-  const values: Array<string> = [user.teacher?.id ?? user.id];
+  const values: Array<string> = [guruId];
   if (statusFilter) { clauses.push("ip.status = ?"); values.push(statusFilter); }
   const where = `WHERE ${clauses.join(" AND ")}`;
 
   try {
-    const [countRow, rows] = await c.env.DB.batch([
+    const [countRow, rows] = await Promise.all([
       c.env.DB.prepare(`SELECT COUNT(*) AS total FROM izin_pengajuan ip ${where}`).bind(...values).first<{ total: number }>(),
       c.env.DB.prepare(
         `SELECT ip.*, g.kode AS guru_kode, g.nama AS guru_nama, u.username AS admin_username
@@ -84,12 +88,16 @@ izinRoutes.post("/", async (c) => {
     const id = crypto.randomUUID();
     const refCode = generateRefCode();
     const now = new Date().toISOString();
-    const guruId = user.teacher?.id ?? user.id;
+    const guruId = user.teacher?.id;
+    if (!guruId) return c.json({ error: "Identitas guru tidak tersedia." }, 403);
 
+    const kelasId = typeof body?.kelas_id === "string" ? body.kelas_id.trim() || null : null;
+    const mapelId = typeof body?.mata_pelajaran_id === "string" ? body.mata_pelajaran_id.trim() || null : null;
+    const jamTerdampak = typeof body?.jam_terdampak === "string" ? body.jam_terdampak.trim() || null : null;
     await c.env.DB.prepare(
-      `INSERT INTO izin_pengajuan (id, ref_code, guru_id, jenis, tanggal, keterangan, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?, ?)`
-    ).bind(id, refCode, guruId, jenis, tanggal, keterangan, now, now).run();
+      `INSERT INTO izin_pengajuan (id, ref_code, guru_id, jenis, tanggal, keterangan, kelas_id, mata_pelajaran_id, jam_terdampak, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?)`
+    ).bind(id, refCode, guruId, jenis, tanggal, keterangan, kelasId, mapelId, jamTerdampak, now, now).run();
 
     return c.json({ id, ref_code: refCode, status: "PENDING" }, 201);
   } catch { return c.json({ error: "Pengajuan izin gagal." }, 500); }
@@ -131,12 +139,21 @@ izinRoutes.patch("/:id/decide", async (c) => {
     const decision = typeof body?.decision === "string" ? body.decision.trim().toUpperCase() : "";
     const notes = typeof body?.notes === "string" ? body.notes.trim() : null;
 
-    if (!["DISETUJUI", "DITOLAK"].includes(decision)) return c.json({ error: "Keputusan tidak sah." }, 400);
+    if (!["DISETUJUI", "DITOLAK", "DISESUAIKAN"].includes(decision)) return c.json({ error: "Keputusan tidak sah." }, 400);
+
+    const kelasId = typeof body?.kelas_id === "string" ? body.kelas_id.trim() || null : null;
+    const mapelId = typeof body?.mata_pelajaran_id === "string" ? body.mata_pelajaran_id.trim() || null : null;
+    const jamTerdampak = typeof body?.jam_terdampak === "string" ? body.jam_terdampak.trim() || null : null;
+    const guruPenggantiId = typeof body?.guru_pengganti_id === "string" ? body.guru_pengganti_id.trim() || null : null;
+    const guruPenggantiNama = typeof body?.guru_pengganti_nama === "string" ? body.guru_pengganti_nama.trim() || null : null;
 
     const decidedAt = new Date().toISOString();
     await c.env.DB.prepare(
-      "UPDATE izin_pengajuan SET status = ?, admin_id = ?, decided_at = ?, decision_notes = ?, updated_at = ? WHERE id = ?"
-    ).bind(decision, user.id, decidedAt, notes, decidedAt, id).run();
+      `UPDATE izin_pengajuan SET status = ?, admin_id = ?, decided_at = ?, decision_notes = ?,
+       kelas_id = COALESCE(?, kelas_id), mata_pelajaran_id = COALESCE(?, mata_pelajaran_id),
+       jam_terdampak = COALESCE(?, jam_terdampak), guru_pengganti_id = ?, guru_pengganti_nama = ?, updated_at = ?
+       WHERE id = ?`
+    ).bind(decision, user.id, decidedAt, notes, kelasId, mapelId, jamTerdampak, guruPenggantiId, guruPenggantiNama, decidedAt, id).run();
 
     return c.json({ ok: true, status: decision, decided_at: decidedAt });
   } catch { return c.json({ error: "Keputusan izin tidak dapat disimpan." }, 500); }
@@ -168,7 +185,7 @@ izinRoutes.get("/", async (c) => {
   const where = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
 
   try {
-    const [countRow, rows] = await c.env.DB.batch([
+    const [countRow, rows] = await Promise.all([
       c.env.DB.prepare(`SELECT COUNT(*) AS total FROM izin_pengajuan ip LEFT JOIN guru g ON g.id = ip.guru_id ${where}`).bind(...values).first<{ total: number }>(),
       c.env.DB.prepare(
         `SELECT ip.*, g.kode AS guru_kode, g.nama AS guru_nama, u.username AS admin_username

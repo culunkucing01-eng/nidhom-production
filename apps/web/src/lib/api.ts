@@ -178,6 +178,8 @@ export interface IzinRecord {
   decided_at: string | null; decision_notes: string | null
   created_at: string; updated_at: string
   guru_kode: string | null; guru_nama: string | null; admin_username: string | null
+  kelas_id?: string | null; mata_pelajaran_id?: string | null; jam_terdampak?: string | null
+  guru_pengganti_id?: string | null; guru_pengganti_nama?: string | null
 }
 
 export async function getMyIzin(params: { page?: number | string; per_page?: number | string; status?: string }): Promise<{ data: IzinRecord[]; pagination: Record<string, unknown> }> {
@@ -190,15 +192,16 @@ export async function getMyIzin(params: { page?: number | string; per_page?: num
 export async function getIzinDetail(id: string): Promise<{ data: IzinRecord }> {
   return apiJson<{ data: IzinRecord }>(`/api/izin/${encodeURIComponent(id)}`)
 }
-export async function submitIzin(jenis: string, tanggal: string, keterangan?: string): Promise<{ id: string; ref_code: string; status: string }> {
+export async function submitIzin(jenis: string, tanggal: string, keterangan?: string, details: Record<string, string | null> = {}): Promise<{ id: string; ref_code: string; status: string }> {
   const body: Record<string, unknown> = { jenis, tanggal }
   if (keterangan) body.keterangan = keterangan
+  Object.assign(body, details)
   const payload = await apiJson<{ id: string; ref_code: string; status: string }>('/api/izin', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   if (!isRecord(payload)) throw new Error('Invalid response')
   return payload as { id: string; ref_code: string; status: string }
 }
-export async function decideIzin(id: string, decision: 'DISETUJUI' | 'DITOLAK', notes?: string): Promise<{ ok: boolean; status: string; decided_at: string }> {
-  const payload = await apiJson<{ ok: boolean; status: string; decided_at: string }>(`/api/izin/${encodeURIComponent(id)}/decide`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ decision, notes: notes ?? null }) })
+export async function decideIzin(id: string, decision: 'DISETUJUI' | 'DITOLAK' | 'DISESUAIKAN', notes?: string, details: Record<string, string | null> = {}): Promise<{ ok: boolean; status: string; decided_at: string }> {
+  const payload = await apiJson<{ ok: boolean; status: string; decided_at: string }>(`/api/izin/${encodeURIComponent(id)}/decide`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ decision, notes: notes ?? null, ...details }) })
   if (!isRecord(payload) || payload.ok !== true) throw new Error('Invalid response')
   return payload as { ok: boolean; status: string; decided_at: string }
 }
@@ -206,6 +209,20 @@ export async function adminListIzin(params: Record<string, string>): Promise<{ d
   const qs = new URLSearchParams()
   for (const [k, v] of Object.entries(params)) if (v) qs.set(k, v)
   return apiJson<{ data: IzinRecord[]; pagination: Record<string, unknown> }>(`/api/izin?${qs}`)
+}
+export interface SyncState {
+  pendingIzinCount: number
+  latestIzinId: string | null
+  latestScheduleUpdateAt: string | null
+  latestClassUpdateAt: string | null
+  latestSubjectUpdateAt: string | null
+  latestIzinDecisionAt: string | null
+}
+export async function getSyncState(): Promise<SyncState> {
+  return apiJson<SyncState>('/api/sync/state')
+}
+export async function adminPendingIzin(): Promise<{ data: IzinRecord[]; pagination: Record<string, unknown> }> {
+  return adminListIzin({ status: 'PENDING', per_page: '20' })
 }
 
 // ── Guru / Kelas / Mapel ─────────────────────────────────────────────────────────

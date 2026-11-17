@@ -10,6 +10,7 @@ import izinRoutes from "./routes/izin";
 import absenRoutes from "./routes/absen";
 import teacherAuthRoutes from "./routes/teacher-auth";
 import dashboardRoutes from "./routes/dashboard";
+import syncRoutes from "./routes/sync";
 import { applicationAuthMiddleware, type AuthEnv } from "./middleware/auth";
 
 const app = new Hono<AuthEnv>();
@@ -35,6 +36,7 @@ app.route("/api/perizinan", perizinanRoutes);
 app.route("/api/izin", izinRoutes);
 app.route("/api/absen", absenRoutes);
 app.route("/api/dashboard", dashboardRoutes);
+app.route("/api/sync", syncRoutes);
 
 app.get("/message", (c) => c.text("Hello Hono!"));
 

@@ -19,6 +19,10 @@ import {
 } from "./validate-production-config.mjs";
 
 const VALID_DB_ID = "a9540faf-320b-48df-a849-3c5ca0235ef0";
+// Baseline mengikuti migrasi KV: rate limiter kini didefinisikan sebagai
+// kv_namespaces dengan id 32-hex unik (bukan blok ratelimits lama).
+const VALID_IP_KV_ID = "11111111111111111111111111111111";
+const VALID_USERNAME_KV_ID = "22222222222222222222222222222222";
 const workDir = mkdtempSync(join(tmpdir(), "nidhom-deploy-guards-"));
 let seq = 0;
 
@@ -43,9 +47,9 @@ function validConfig() {
         migrations_dir: "migrations",
       },
     ],
-    ratelimits: [
-      { name: "LOGIN_IP_RATE_LIMITER", namespace_id: "1111111", simple: { limit: 30, period: 60 } },
-      { name: "LOGIN_USERNAME_RATE_LIMITER", namespace_id: "2222222", simple: { limit: 10, period: 60 } },
+    kv_namespaces: [
+      { binding: "LOGIN_IP_RATE_LIMITER", id: VALID_IP_KV_ID },
+      { binding: "LOGIN_USERNAME_RATE_LIMITER", id: VALID_USERNAME_KV_ID },
     ],
   };
 }
@@ -110,20 +114,23 @@ describe("validate-production-config: skenario kegagalan", () => {
 
   test("menolak namespace_id yang masih placeholder", () => {
     const result = validateObject((c) => {
-      c.ratelimits[0].namespace_id = "REPLACE_WITH_OFFICIAL_LOGIN_IP_NAMESPACE_ID";
+      c.kv_namespaces[0].id = "REPLACE_WITH_OFFICIAL_LOGIN_IP_NAMESPACE_ID";
     });
     assert.equal(result.ok, false, "placeholder harus ditolak");
     assert.ok(result.errors.some((e) => e.includes("placeholder")));
   });
 
-  test("menolak namespace_id yang bukan bilangan bulat positif", () => {
-    const result = validateObject((c) => { c.ratelimits[0].namespace_id = "0"; });
-    assert.equal(result.ok, false, "nilai 0 bukan bilangan bulat positif");
-    assert.ok(result.errors.some((e) => e.includes("bilangan bulat positif")));
+  test("menolak namespace_id yang bukan 32 karakter heksadesimal", () => {
+    const nol = validateObject((c) => { c.kv_namespaces[0].id = "0"; });
+    assert.equal(nol.ok, false, "nilai 0 bukan id KV namespace yang sah");
+    assert.ok(nol.errors.some((e) => e.includes("32 karakter heksadesimal")));
+
+    const pendek = validateObject((c) => { c.kv_namespaces[0].id = "abc123"; });
+    assert.equal(pendek.ok, false, "id terlalu pendek harus ditolak");
   });
 
   test("menolak namespace_id yang duplikat antar limiter", () => {
-    const result = validateObject((c) => { c.ratelimits[1].namespace_id = "1111111"; });
+    const result = validateObject((c) => { c.kv_namespaces[1].id = VALID_IP_KV_ID; });
     assert.equal(result.ok, false, "namespace_id duplikat harus ditolak");
     assert.ok(
       result.errors.some((e) => e.includes("BERBEDA") || e.includes("unique")),
@@ -131,15 +138,20 @@ describe("validate-production-config: skenario kegagalan", () => {
     );
   });
 
-  test("menolak threshold rate limiter yang diubah", () => {
-    const result = validateObject((c) => { c.ratelimits[0].simple = { limit: 100, period: 60 }; });
-    assert.equal(result.ok, false, "threshold tak boleh diubah");
-    assert.ok(result.errors.some((e) => e.includes("30/60")));
+  test("menolak blok ratelimits (Rate Limiting API) yang sudah usang", () => {
+    const result = validateObject((c) => {
+      c.ratelimits = [
+        { name: "LOGIN_IP_RATE_LIMITER", namespace_id: "1111111", simple: { limit: 30, period: 60 } },
+      ];
+    });
+    assert.equal(result.ok, false, "blok ratelimits lama harus ditolak");
+    assert.ok(result.errors.some((e) => e.includes("ratelimits")));
   });
 
-  test("menolak ketika salah satu rate limiter hilang", () => {
-    const result = validateObject((c) => { c.ratelimits = c.ratelimits.slice(0, 1); });
-    assert.equal(result.ok, false, "jumlah rate limiter harus tepat 2");
+  test("menolak ketika salah satu KV namespace rate limiter hilang", () => {
+    const result = validateObject((c) => { c.kv_namespaces = c.kv_namespaces.slice(0, 1); });
+    assert.equal(result.ok, false, "jumlah KV namespace rate limiter harus tepat 2");
+    assert.ok(result.errors.some((e) => e.includes("tidak ditemukan")));
   });
 
   test("menolak FRONTEND_ORIGINS yang bukan https", () => {

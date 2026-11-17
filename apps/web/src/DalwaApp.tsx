@@ -1,5 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Button, Card, Input } from './components/ui'
+import { MuteButton } from './components/ui/MuteButton'
+import { ToastProvider } from './components/ui/Toast'
 import {
   ApiError,
   changePassword,
@@ -184,7 +186,7 @@ function PasswordField({
   )
 }
 
-export default function DalwaApp() {
+function DalwaAppInner() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null)
   const [booting, setBooting] = useState(true)
   const [screen, setScreen] = useState<Screen>('landing')
@@ -443,6 +445,7 @@ export default function DalwaApp() {
             </div>
           </div>
           <div className="dl-topbar__actions">
+            <MuteButton />
             <span className="dl-account" dir="auto">
               {user.teacher?.name || user.username}
             </span>
@@ -526,5 +529,13 @@ export default function DalwaApp() {
       {adminScreen === 'jadwal' && <JadwalManager />}
       {importOpen && <ImportExcelModal onClose={() => setImportOpen(false)} />}
     </AdminLayout>
+  )
+}
+
+export default function DalwaApp() {
+  return (
+    <ToastProvider>
+      <DalwaAppInner />
+    </ToastProvider>
   )
 }

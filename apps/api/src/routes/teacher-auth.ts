@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import type { AuthEnv } from "../middleware/auth";
-import { clearSessionCookie, hashSessionToken, isValidSessionToken, setSessionCookie, type AuthenticatedUser } from "../middleware/auth";
+import { clearSessionCookie, hashSessionToken, isValidSessionToken, setSessionCookie } from "../middleware/auth";
 
 interface TeacherAuthRow {
   id: string;
@@ -14,10 +14,15 @@ interface TeacherAuthRow {
   teacher_name: string | null;
 }
 
+interface TeacherAccountRow {
+  user_id: string | null;
+  username: string | null;
+  role: string | null;
+}
+
 const SESSION_COOKIE = "nidhom_session";
 const SESSION_IDLE_MS = 4 * 60 * 60 * 1000;
 const SESSION_ABSOLUTE_MS = 12 * 60 * 60 * 1000;
-const encoder = new TextEncoder();
 const MAX_REQUEST_BYTES = 4096;
 
 function createSessionToken(): string {
@@ -76,7 +81,70 @@ teacherAuthRoutes.post("/login", async (c) => {
       return c.json({ error: "Guru tidak ditemukan atau tidak aktif." }, 404);
     }
 
-    // Create a lightweight teacher session directly (no password required)
+    // Sesi tetap memakai sessions.user_id -> users.id. Guru bukan users.id,
+    // sehingga akun TEACHER dan relasi teacher_auth harus tersedia lebih dulu.
+    const account = await c.env.DB.prepare(
+      `SELECT u.id AS user_id, u.username, u.role
+       FROM guru g
+       LEFT JOIN teacher_auth ta ON ta.guru_id = g.id
+       LEFT JOIN users u ON u.id = ta.user_id
+       WHERE g.id = ? AND g.is_active = 1
+       LIMIT 1`,
+    )
+      .bind(guru.id)
+      .first<TeacherAccountRow>();
+
+    let userId = account?.user_id ?? null;
+    if (account?.user_id && account.role !== "TEACHER") {
+      return c.json({ error: "Akun guru tidak valid." }, 409);
+    }
+
+    if (!userId) {
+      const existingByUsername = await c.env.DB.prepare(
+        "SELECT id, role FROM users WHERE username = ? COLLATE NOCASE LIMIT 1",
+      )
+        .bind(guru.kode)
+        .first<{ id: string; role: string }>();
+
+      if (existingByUsername && existingByUsername.role !== "TEACHER") {
+        return c.json({ error: "Kode guru sudah dipakai akun lain." }, 409);
+      }
+
+      userId = existingByUsername?.id ?? createId();
+      const passwordHash = `teacher-no-password$${createId()}`;
+      const nowIso = new Date().toISOString();
+      const statements = [];
+
+      if (!existingByUsername) {
+        statements.push(
+          c.env.DB.prepare(
+            `INSERT INTO users
+             (id, username, password_hash, role, is_active, must_change_password, failed_login_attempts, created_at, updated_at)
+             VALUES (?, ?, ?, 'TEACHER', 1, 0, 0, ?, ?)`,
+          ).bind(userId, guru.kode, passwordHash, nowIso, nowIso),
+        );
+      } else {
+        statements.push(
+          c.env.DB.prepare(
+            `UPDATE users
+             SET role = 'TEACHER', is_active = 1, must_change_password = 0,
+                 failed_login_attempts = 0, locked_until = NULL, updated_at = ?
+             WHERE id = ?`,
+          ).bind(nowIso, userId),
+        );
+      }
+
+      statements.push(
+        c.env.DB.prepare(
+          `INSERT INTO teacher_auth (id, user_id, guru_id, created_at)
+           VALUES (?, ?, ?, ?)
+           ON CONFLICT(guru_id) DO UPDATE SET user_id = excluded.user_id`,
+        ).bind(createId(), userId, guru.id, nowIso),
+      );
+      await c.env.DB.batch(statements);
+    }
+
+    // Create a teacher session using the users primary key (no password required).
     const now = Date.now();
     const loginTime = new Date(now).toISOString();
     const absoluteExpiry = new Date(now + SESSION_ABSOLUTE_MS).toISOString();
@@ -88,7 +156,7 @@ teacherAuthRoutes.post("/login", async (c) => {
     await c.env.DB.prepare(
       `INSERT INTO sessions (id, user_id, token_hash, expires_at, last_activity_at, created_at)
        VALUES (?, ?, ?, ?, ?, ?)`,
-    ).bind(sessionId, guruId, tokenHash, idleExpiry, loginTime, loginTime).run();
+    ).bind(sessionId, userId, tokenHash, idleExpiry, loginTime, loginTime).run();
 
     setSessionCookie(c, token, idleExpiry, now);
 

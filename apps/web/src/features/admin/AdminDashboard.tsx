@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Badge } from '../../components/ui'
+import { useToast } from '../../components/ui/Toast'
 import { getDashboardStats, type DashboardStats } from '../../lib/api'
+import { useAdminIzinPolling } from '../../hooks/useIzinPolling'
+import { IzinApprovalPanel } from './IzinApprovalPanel'
 import './AdminDashboard.css'
 
 /* Ikon minimalis (stroke; mewarisi warna lewat currentColor) */
@@ -80,11 +83,26 @@ function SectionSkeleton() {
 }
 
 export function AdminDashboard() {
+  const { toast } = useToast()
   const [stats, setStats] = useState<DashboardStats['stats']>({})
   const [syncHistory, setSyncHistory] = useState<DashboardStats['recentSyncActivity']>([])
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
+  const [izinRefreshKey, setIzinRefreshKey] = useState(0)
+
+  // Polling: deteksi pengajuan izin PENDING baru dari guru
+  const handleNewPending = useCallback(
+    (newItems: { ref_code: string }[]) => {
+      toast(
+        `${newItems.length} pengajuan izin baru menunggu persetujuan.`,
+        'info',
+      )
+      setIzinRefreshKey((k) => k + 1)
+    },
+    [toast],
+  )
+  useAdminIzinPolling(handleNewPending)
 
   useEffect(() => {
     let cancelled = false
@@ -178,7 +196,7 @@ export function AdminDashboard() {
               <h2>Pengajuan Izin Menunggu</h2>
             </header>
             <div className="dashboard-card__body">
-              <p className="dashboard-placeholder">Data pengajuan izin akan ditampilkan di sini.</p>
+              <IzinApprovalPanel refreshKey={izinRefreshKey} />
             </div>
           </Card>
 

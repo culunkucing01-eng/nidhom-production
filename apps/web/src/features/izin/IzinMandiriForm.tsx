@@ -1,6 +1,13 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { Button, Card, Input } from '../../components/ui'
-import { ApiError, submitAbsen, submitIzin } from '../../lib/api'
+import {
+  ApiError,
+  getGuruList,
+  getKelasList,
+  getMapelList,
+  submitAbsen,
+  submitIzin,
+} from '../../lib/api'
 
 export interface IzinMandiriFormProps {
   onBack: () => void
@@ -10,6 +17,11 @@ type Tab = 'izin' | 'absen'
 
 const IZIN_JENIS = ['Sakit', 'Izin', 'Tidak Hadir'] as const
 const ABSEN_STATUS = ['Izin', 'Sakit', 'Ghaib'] as const
+
+interface OptionItem {
+  id: string
+  label: string
+}
 
 function todayStr(): string {
   return new Date().toISOString().slice(0, 10)
@@ -38,6 +50,55 @@ export function IzinMandiriForm({ onBack }: IzinMandiriFormProps) {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  // Opsi untuk field izin lanjutan
+  const [kelasOptions, setKelasOptions] = useState<OptionItem[]>([])
+  const [mapelOptions, setMapelOptions] = useState<OptionItem[]>([])
+  const [guruOptions, setGuruOptions] = useState<OptionItem[]>([])
+  const [selectedKelasId, setSelectedKelasId] = useState('')
+  const [selectedMapelId, setSelectedMapelId] = useState('')
+  const [jamTerdampak, setJamTerdampak] = useState('')
+  const [guruPenggantiId, setGuruPenggantiId] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadOptions() {
+      try {
+        const [kelas, mapel, gurus] = await Promise.all([
+          getKelasList({ per_page: 100 }),
+          getMapelList({ per_page: 100 }),
+          getGuruList(),
+        ])
+        if (cancelled) return
+        setKelasOptions(
+          (kelas.data as Array<{ id: string; nama: string }>).map((k) => ({
+            id: k.id,
+            label: k.nama,
+          })),
+        )
+        setMapelOptions(
+          (mapel.data as Array<{ id: string; nama_arab: string; nama_indo: string | null }>).map(
+            (m) => ({
+              id: m.id,
+              label: m.nama_indo ? `${m.nama_arab} (${m.nama_indo})` : m.nama_arab,
+            }),
+          ),
+        )
+        setGuruOptions(
+          (gurus as Array<{ id: string; nama: string; kode: string }>).map((g) => ({
+            id: g.id,
+            label: `${g.nama} (${g.kode})`,
+          })),
+        )
+      } catch {
+        /* abaikan — field opsional */
+      }
+    }
+    loadOptions()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError('')
@@ -51,7 +112,12 @@ export function IzinMandiriForm({ onBack }: IzinMandiriFormProps) {
     setSubmitting(true)
     try {
       if (tab === 'izin') {
-        const res = await submitIzin(jenis, tanggal, keterangan.trim() || undefined)
+        const details: Record<string, string | null> = {}
+        if (selectedKelasId) details.kelas_id = selectedKelasId
+        if (selectedMapelId) details.mata_pelajaran_id = selectedMapelId
+        if (jamTerdampak.trim()) details.jam_terdampak = jamTerdampak.trim()
+        if (guruPenggantiId) details.guru_pengganti_id = guruPenggantiId
+        const res = await submitIzin(jenis, tanggal, keterangan.trim() || undefined, details)
         setSuccess(`Pengajuan izin terkirim. Kode referensi: ${res.ref_code}`)
       } else {
         const trimmedJam = jumlahJam.trim()
@@ -75,6 +141,10 @@ export function IzinMandiriForm({ onBack }: IzinMandiriFormProps) {
       setRincianJam('')
       setJumlahJam('')
       setMataPelajaran('')
+      setSelectedKelasId('')
+      setSelectedMapelId('')
+      setJamTerdampak('')
+      setGuruPenggantiId('')
     } catch (err) {
       setError(toMessage(err))
     } finally {
@@ -126,22 +196,83 @@ export function IzinMandiriForm({ onBack }: IzinMandiriFormProps) {
       <Card>
         <form className="dl-form" noValidate onSubmit={handleSubmit}>
           {tab === 'izin' ? (
-            <div className="field">
-              <span className="field__label">Jenis Izin</span>
-              <div className="dl-choices">
-                {IZIN_JENIS.map((j) => (
-                  <button
-                    aria-pressed={jenis === j}
-                    className={`dl-choice ${jenis === j ? 'is-active' : ''}`}
-                    key={j}
-                    onClick={() => setJenis(j)}
-                    type="button"
-                  >
-                    {j}
-                  </button>
-                ))}
+            <>
+              <div className="field">
+                <span className="field__label">Jenis Izin</span>
+                <div className="dl-choices">
+                  {IZIN_JENIS.map((j) => (
+                    <button
+                      aria-pressed={jenis === j}
+                      className={`dl-choice ${jenis === j ? 'is-active' : ''}`}
+                      key={j}
+                      onClick={() => setJenis(j)}
+                      type="button"
+                    >
+                      {j}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+
+              <div className="field">
+                <label className="field__label" htmlFor="izin-kelas">
+                  Kelas (opsional)
+                </label>
+                <select
+                  className="field__control"
+                  id="izin-kelas"
+                  onChange={(e) => setSelectedKelasId(e.target.value)}
+                  value={selectedKelasId}
+                >
+                  <option value="">— Tidak ditentukan —</option>
+                  {kelasOptions.map((k) => (
+                    <option key={k.id} value={k.id}>{k.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="field">
+                <label className="field__label" htmlFor="izin-mapel">
+                  Mata Pelajaran (opsional)
+                </label>
+                <select
+                  className="field__control"
+                  id="izin-mapel"
+                  onChange={(e) => setSelectedMapelId(e.target.value)}
+                  value={selectedMapelId}
+                >
+                  <option value="">— Tidak ditentukan —</option>
+                  {mapelOptions.map((m) => (
+                    <option key={m.id} value={m.id}>{m.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <Input
+                id="izin-jam-terdampak"
+                label="Jam Terdampak (opsional)"
+                onChange={(e) => setJamTerdampak(e.target.value)}
+                placeholder="mis. Jam ke-1 - 2"
+                value={jamTerdampak}
+              />
+
+              <div className="field">
+                <label className="field__label" htmlFor="izin-guru-pengganti">
+                  Guru Pengganti (opsional)
+                </label>
+                <select
+                  className="field__control"
+                  id="izin-guru-pengganti"
+                  onChange={(e) => setGuruPenggantiId(e.target.value)}
+                  value={guruPenggantiId}
+                >
+                  <option value="">— Tidak ada —</option>
+                  {guruOptions.map((g) => (
+                    <option key={g.id} value={g.id}>{g.label}</option>
+                  ))}
+                </select>
+              </div>
+            </>
           ) : (
             <>
               <div className="field">

@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Button, Card, Badge } from '../../components/ui'
+import { useToast } from '../../components/ui/Toast'
 import { getJadwalTimetable, getMyIzin, type AuthenticatedUser, type JadwalItem, type IzinItem } from '../../lib/api'
+import { useTeacherIzinPolling } from '../../hooks/useIzinPolling'
 import './TeacherDashboard.css'
 
 export interface TeacherDashboardProps {
@@ -14,6 +16,7 @@ export function TeacherDashboard({
   onNavigateIzinSubmit,
   onNavigateIzinHistory,
 }: TeacherDashboardProps) {
+  const { toast } = useToast()
   const [greeting] = useState<string>(() => {
     const h = new Date().getHours()
     return h < 10 ? 'Selamat pagi' : h < 14 ? 'Selamat siang' : h < 18 ? 'Selamat sore' : 'Selamat malam'
@@ -21,6 +24,21 @@ export function TeacherDashboard({
   const [todaySchedule, setTodaySchedule] = useState<JadwalItem[]>([])
   const [latestIzin, setLatestIzin] = useState<IzinItem | null>(null)
   const [loading, setLoading] = useState(true)
+
+  // Polling dua arah: deteksi keputusan admin atas pengajuan guru
+  const handleDecision = useCallback((izin: IzinItem) => {
+    const statusText =
+      izin.status === 'DISETUJUI' ? 'disetujui' :
+      izin.status === 'DITOLAK' ? 'ditolak' : 'disesuaikan'
+    const variant = izin.status === 'DISETUJUI' ? 'success' : izin.status === 'DITOLAK' ? 'error' : 'info'
+    toast(`Pengajuan ${izin.ref_code} telah ${statusText}.`, variant)
+    // Refresh data di layar
+    getMyIzin({ per_page: 5 }).then((res) => {
+      setLatestIzin(res.data?.[0] ?? null)
+    }).catch(() => {})
+  }, [toast])
+
+  useTeacherIzinPolling(handleDecision)
 
   useEffect(() => {
     let cancelled = false
