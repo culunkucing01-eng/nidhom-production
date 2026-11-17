@@ -118,10 +118,44 @@
   flex-direction: column;
   padding: 0;
 }
-.dashboard-card__header { padding: 16px 20px; border-bottom: 1px solid var(--color-border); }
+.dashboard-card__header { padding: 16px 20px; border-bottom: 1px solid var(--color-border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .dashboard-card__header h2 { margin: 0; color: var(--color-text); font-size: 15px; font-weight: 750; }
+.dashboard-card__badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--dl-brand-soft, rgba(114, 142, 109, 0.14));
+  color: var(--dl-brand, #5c7758);
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
 .dashboard-card__body { flex: 1; padding: 18px 20px; }
 .dashboard-placeholder { margin: 0; color: var(--color-text-secondary); font-size: 13px; }
+
+/* ---------- Jadwal hari ini ---------- */
+.schedule-today { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.schedule-today__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-elevated);
+}
+.schedule-today__period {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--dl-brand-soft, rgba(114, 142, 109, 0.14));
+  color: var(--dl-brand, #5c7758);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.schedule-today__detail { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.schedule-today__subject { color: var(--color-text); font-size: 14px; font-weight: 650; }
+.schedule-today__meta { color: var(--color-text-secondary); font-size: 12px; }
 .quick-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-content: start; }
 .quick-actions .button { min-height: 46px; justify-content: flex-start; border-radius: 11px; }
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button, Card, Badge } from '../../components/ui'
-import { getDashboardStats, type DashboardStats } from '../../lib/api'
+import { getDashboardStats, getJadwalTimetable, type DashboardStats, type JadwalItem } from '../../lib/api'
 import { IzinApprovalPanel } from './IzinApprovalPanel'
 import './AdminDashboard.css'
 
@@ -87,6 +87,38 @@ export function AdminDashboard() {
   const [failed, setFailed] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
   const [izinRefreshKey] = useState(0)
+  const [todaySchedule, setTodaySchedule] = useState<JadwalItem[]>([])
+  const [scheduleLoading, setScheduleLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    getJadwalTimetable()
+      .then((timetable) => {
+        if (cancelled) return
+        const days = (timetable.days ?? []) as string[]
+        const grid = (timetable.grid ?? {}) as Record<string, Record<string, JadwalItem | null>>
+        // Backend grid keys mengikuti urutan `days` (index 0 = Sabtu ... 5 = Kamis).
+        // Konversi hari berjalan (JS getDay: 0=Minggu..6=Sabtu) ke index tersebut.
+        const jsDay = new Date().getDay()
+        const todayIndex = jsDay === 0 ? 1 : jsDay === 6 ? 0 : jsDay - 1
+        const todayKey = days[todayIndex] ?? ''
+        const rows: JadwalItem[] = []
+        for (const period of [1, 2, 3, 4]) {
+          const item = grid[todayKey]?.[period]
+          if (item) rows.push(item)
+        }
+        setTodaySchedule(rows)
+      })
+      .catch(() => {
+        if (!cancelled) setTodaySchedule([])
+      })
+      .finally(() => {
+        if (!cancelled) setScheduleLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [reloadKey])
 
   useEffect(() => {
     let cancelled = false
@@ -220,9 +252,31 @@ export function AdminDashboard() {
           <Card className="dashboard-card">
             <header className="dashboard-card__header">
               <h2>Jadwal Hari Ini</h2>
+              <span className="dashboard-card__badge">{todaySchedule.length} pelajaran</span>
             </header>
             <div className="dashboard-card__body">
-              <p className="dashboard-placeholder">Ringkasan jadwal pelajaran hari ini akan ditampilkan di sini.</p>
+              {scheduleLoading ? (
+                <p className="dashboard-placeholder">Memuat jadwal hari ini…</p>
+              ) : todaySchedule.length === 0 ? (
+                <p className="dashboard-placeholder">Tidak ada jadwal pelajaran hari ini.</p>
+              ) : (
+                <ul className="schedule-today">
+                  {todaySchedule.map((item, idx) => (
+                    <li key={item.id ?? idx} className="schedule-today__item">
+                      <span className="schedule-today__period">Periode {item.period}</span>
+                      <div className="schedule-today__detail">
+                        <span className="schedule-today__subject">
+                          {item.mapel_nama_arab || item.mapel_nama_indo || 'Mata pelajaran'}
+                        </span>
+                        <span className="schedule-today__meta">
+                          {item.kelas_nama || 'Kelas'}
+                          {item.guru_nama ? ` · ${item.guru_nama}` : ''}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </Card>
         </div>

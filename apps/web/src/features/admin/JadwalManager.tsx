@@ -1,5 +1,5 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { Button, Card } from '../../components/ui'
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { Button, Card, Badge } from '../../components/ui'
 import { createJadwal, deleteJadwal, getJadwalList, updateJadwal } from '../../lib/api'
 import { listGuru } from '../../lib/guruApi'
 import { listKelas } from '../../lib/kelasApi'
@@ -13,6 +13,21 @@ const PER_PAGE = 8
 interface Option {
   id: string
   label: string
+}
+
+interface JadwalRecord {
+  id: string
+  kelas_id: string
+  guru_id: string
+  mata_pelajaran_id: string
+  day_index: number
+  period: number
+  kelas_nama?: string | null
+  guru_kode?: string | null
+  guru_nama?: string | null
+  mapel_nama_arab?: string | null
+  mapel_nama_indo?: string | null
+  is_active?: number | null
 }
 
 interface JadwalFormValues {
@@ -40,18 +55,21 @@ export function JadwalManager() {
   const [kelasOptions, setKelasOptions] = useState<Option[]>([])
   const [mapelOptions, setMapelOptions] = useState<Option[]>([])
 
-  const [rows, setRows] = useState<Record<string, unknown>[]>([])
+  const [rows, setRows] = useState<JadwalRecord[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const [filterDay, setFilterDay] = useState<string>('all')
+  const [filterKelas, setFilterKelas] = useState<string>('all')
 
   const [form, setForm] = useState<{ mode: 'create' } | { mode: 'edit'; id: string } | null>(null)
   const [values, setValues] = useState<JadwalFormValues>(emptyValues)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
 
-  const [deleteTarget, setDeleteTarget] = useState<Record<string, unknown> | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<JadwalRecord | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
@@ -83,13 +101,27 @@ export function JadwalManager() {
 
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE))
 
+  const reload = useCallback(async (targetPage: number) => {
+    setLoading(true)
+    try {
+      const result = await getJadwalList({ page: targetPage, per_page: PER_PAGE })
+      setRows((result.data ?? []) as JadwalRecord[])
+      setTotal(Number(result.pagination?.total ?? 0))
+      setError(null)
+    } catch (cause) {
+      setError(message(cause, 'Data jadwal tidak dapat dimuat.'))
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     getJadwalList({ page, per_page: PER_PAGE }).then(
       (result) => {
         if (cancelled) return
-        setRows(result.data as unknown as Record<string, unknown>[])
-        setTotal(Number(result.pagination.total ?? 0))
+        setRows((result.data ?? []) as JadwalRecord[])
+        setTotal(Number(result.pagination?.total ?? 0))
         setLoading(false)
       },
       (cause: unknown) => {
@@ -103,27 +135,13 @@ export function JadwalManager() {
     }
   }, [page])
 
-  async function reload() {
-    setLoading(true)
-    try {
-      const result = await getJadwalList({ page, per_page: PER_PAGE })
-      setRows(result.data as unknown as Record<string, unknown>[])
-      setTotal(Number(result.pagination.total ?? 0))
-      setError(null)
-    } catch (cause) {
-      setError(message(cause, 'Data jadwal tidak dapat dimuat.'))
-    } finally {
-      setLoading(false)
-    }
-  }
-
   function openCreate() {
     setValues(emptyValues)
     setFormError(null)
     setForm({ mode: 'create' })
   }
 
-  function openEdit(row: Record<string, unknown>) {
+  function openEdit(row: JadwalRecord) {
     setValues({
       kelas_id: String(row.kelas_id ?? ''),
       guru_id: String(row.guru_id ?? ''),
@@ -154,7 +172,7 @@ export function JadwalManager() {
         await updateJadwal(form.id, input)
       }
       setForm(null)
-      await reload()
+      await reload(page)
     } catch (cause) {
       setFormError(message(cause, 'Gagal menyimpan jadwal.'))
     } finally {
@@ -173,7 +191,7 @@ export function JadwalManager() {
       if (wasLastOnPage) {
         setPage((current) => current - 1)
       } else {
-        await reload()
+        await reload(page)
       }
     } catch (cause) {
       setDeleteError(message(cause, 'Gagal menghapus jadwal.'))
@@ -184,13 +202,36 @@ export function JadwalManager() {
 
   function gotoPage(next: number) {
     if (next < 1 || next > totalPages || next === page) return
-    setLoading(true)
     setPage(next)
   }
 
-  function dayLabel(row: Record<string, unknown>): string {
+  const filteredRows = useMemo(() => {
+    return rows.filter((row) => {
+      const dayMatch = filterDay === 'all' || String(row.day_index) === filterDay
+      const kelasMatch = filterKelas === 'all' || row.kelas_id === filterKelas
+      return dayMatch && kelasMatch
+    })
+  }, [rows, filterDay, filterKelas])
+
+  function dayLabel(row: JadwalRecord): string {
     const index = Number(row.day_index)
     return DAYS[index] ?? `Hari ${index}`
+  }
+
+  function guruLabel(row: JadwalRecord): string {
+    const nama = row.guru_nama ?? '—'
+    const kode = row.guru_kode
+    return kode ? `${nama} (${kode})` : nama
+  }
+
+  function mapelLabel(row: JadwalRecord): string {
+    return row.mapel_nama_arab ?? row.mapel_nama_indo ?? '—'
+  }
+
+  function isActive(row: JadwalRecord): boolean {
+    return row.is_active === undefined || row.is_active === null
+      ? true
+      : Number(row.is_active) === 1
   }
 
   return (
@@ -205,6 +246,37 @@ export function JadwalManager() {
         </Button>
       </div>
 
+      <div className="jadwal-filters">
+        <div className="field">
+          <label className="field__label" htmlFor="jadwal-filter-day">Filter Hari</label>
+          <select
+            className="field__control"
+            id="jadwal-filter-day"
+            value={filterDay}
+            onChange={(event) => setFilterDay(event.target.value)}
+          >
+            <option value="all">Semua Hari</option>
+            {DAYS.map((day, index) => (
+              <option key={day} value={String(index)}>{day}</option>
+            ))}
+          </select>
+        </div>
+        <div className="field">
+          <label className="field__label" htmlFor="jadwal-filter-kelas">Filter Kelas</label>
+          <select
+            className="field__control"
+            id="jadwal-filter-kelas"
+            value={filterKelas}
+            onChange={(event) => setFilterKelas(event.target.value)}
+          >
+            <option value="all">Semua Kelas</option>
+            {kelasOptions.map((option) => (
+              <option key={option.id} value={option.id}>{option.label}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       {error && (
         <p className="entity-manager__error" role="alert">
           {error}
@@ -213,31 +285,41 @@ export function JadwalManager() {
 
       {loading ? (
         <p className="entity-manager__hint">Memuat jadwal…</p>
-      ) : rows.length === 0 ? (
-        <p className="entity-manager__hint">Belum ada jadwal. Tambah jadwal atau impor dari Excel.</p>
+      ) : filteredRows.length === 0 ? (
+        <p className="entity-manager__hint">
+          {rows.length === 0
+            ? 'Belum ada jadwal. Tambah jadwal atau impor dari Excel.'
+            : 'Tidak ada jadwal yang cocok dengan filter yang dipilih.'}
+        </p>
       ) : (
         <>
           <div className="entity-table__wrapper">
             <table className="entity-table">
               <thead>
                 <tr>
-                  <th>Hari</th>
-                  <th>Periode</th>
-                  <th>Kelas</th>
-                  <th>Guru</th>
-                  <th>Mata Pelajaran</th>
-                  <th className="entity-table__actions-col">Aksi</th>
+                  <th scope="col">Hari</th>
+                  <th scope="col">Jam / Periode</th>
+                  <th scope="col">Kelas</th>
+                  <th scope="col">Mata Pelajaran</th>
+                  <th scope="col">Guru</th>
+                  <th scope="col">Status</th>
+                  <th scope="col"><span className="visually-hidden">Tindakan</span></th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row, index) => (
-                  <tr key={String(row.id ?? index)}>
-                    <td>{dayLabel(row)}</td>
-                    <td>{String(row.period ?? '—')}</td>
-                    <td>{String(row.kelas_nama ?? '—')}</td>
-                    <td>{String(row.guru_nama ?? '—')}</td>
-                    <td>{String(row.mapel_nama_arab ?? '—')}</td>
-                    <td className="entity-table__actions">
+                {filteredRows.map((row) => (
+                  <tr key={row.id}>
+                    <td data-label="Hari">{dayLabel(row)}</td>
+                    <td data-label="Jam / Periode">Periode {String(row.period ?? '—')}</td>
+                    <td data-label="Kelas">{row.kelas_nama ?? '—'}</td>
+                    <td data-label="Mata Pelajaran">{mapelLabel(row)}</td>
+                    <td data-label="Guru">{guruLabel(row)}</td>
+                    <td data-label="Status">
+                      <Badge variant={isActive(row) ? 'success' : 'neutral'}>
+                        {isActive(row) ? 'Aktif' : 'Nonaktif'}
+                      </Badge>
+                    </td>
+                    <td className="entity-table__actions" data-label="Tindakan">
                       <Button variant="ghost" onClick={() => openEdit(row)}>
                         Edit
                       </Button>
