@@ -5,31 +5,29 @@ const dashboardRoutes = new Hono<AuthEnv>();
 
 dashboardRoutes.get("/stats", async (c) => {
   try {
-    const [
-      guruCount,
-      kelasCount,
-      mapelCount,
-      jadwalCount,
-      absenCount,
-      perizinanCount,
-      lastSync,
-    ] = await c.env.DB.batch([
+    const [guruCount, kelasCount, mapelCount, jadwalCount, absenCount, perizinanCount] = await Promise.all([
       c.env.DB.prepare("SELECT COUNT(*) AS total FROM guru WHERE is_active = 1").first<{ total: number }>(),
       c.env.DB.prepare("SELECT COUNT(*) AS total FROM kelas WHERE is_active = 1").first<{ total: number }>(),
       c.env.DB.prepare("SELECT COUNT(*) AS total FROM mata_pelajaran WHERE is_active = 1").first<{ total: number }>(),
-      c.env.DB.prepare("SELECT COUNT(*) AS total FROM jadwal").first<{ total: number }>(),
+      c.env.DB.prepare("SELECT COUNT(*) AS total FROM jadwal WHERE is_active = 1").first<{ total: number }>(),
       c.env.DB.prepare("SELECT COUNT(*) AS total FROM absen").first<{ total: number }>(),
       c.env.DB.prepare("SELECT COUNT(*) AS total FROM perizinan").first<{ total: number }>(),
-      c.env.DB.prepare(
-        "SELECT created_at AS last_sync FROM import_runs WHERE status IN ('completed','partial') ORDER BY created_at DESC LIMIT 1"
-      ).first<{ last_sync: string | null }>(),
     ]);
 
-    const recentRuns = await c.env.DB
-      .prepare(
+    let lastSuccessfulSync: string | null = null;
+    let recentSyncActivity: Array<Record<string, unknown>> = [];
+    try {
+      const lastSync = await c.env.DB.prepare(
+        "SELECT created_at AS last_sync FROM import_runs WHERE status IN ('completed','partial') ORDER BY created_at DESC LIMIT 1",
+      ).first<{ last_sync: string | null }>();
+      lastSuccessfulSync = lastSync?.last_sync ?? null;
+      const recentRuns = await c.env.DB.prepare(
         "SELECT id, file_name, sheet_name, entity_type, status, total_rows, inserted_count, updated_count, failed_count, created_at FROM import_runs ORDER BY created_at DESC LIMIT 10",
-      )
-      .all();
+      ).all();
+      recentSyncActivity = (recentRuns.results ?? []) as Array<Record<string, unknown>>;
+    } catch (error) {
+      console.error("Dashboard import history query failed.", error);
+    }
 
     return c.json({
       stats: {
@@ -39,20 +37,9 @@ dashboardRoutes.get("/stats", async (c) => {
         totalSchedules: jadwalCount?.total ?? 0,
         totalAbsen: absenCount?.total ?? 0,
         totalPerizinan: perizinanCount?.total ?? 0,
-        lastSuccessfulSync: lastSync?.last_sync ?? null,
+        lastSuccessfulSync,
       },
-      recentSyncActivity: (recentRuns.results ?? []) as unknown as Array<{
-        id: string;
-        file_name: string;
-        sheet_name: string;
-        entity_type: string;
-        status: string;
-        total_rows: number;
-        inserted_count: number;
-        updated_count: number;
-        failed_count: number;
-        created_at: string;
-      }>,
+      recentSyncActivity,
     });
   } catch {
     console.error("Dashboard stats query failed.");

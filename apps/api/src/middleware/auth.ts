@@ -130,46 +130,52 @@ export const authMiddleware: MiddlewareHandler<AuthEnv> = async (c, next) => {
 
   const nextExpiry = new Date(Math.min(now + SESSION_IDLE_MS, absoluteExpiry)).toISOString();
   const nowIso = new Date(now).toISOString();
-  const activityUpdate = await c.env.DB.prepare(
-    `UPDATE sessions
-     SET expires_at = CASE
-           WHEN julianday(expires_at) > julianday(?)
-             THEN CASE
-               WHEN julianday(expires_at) < julianday(?) THEN expires_at
-               ELSE ?
-             END
-           ELSE ?
-         END,
-         last_activity_at = CASE
-           WHEN julianday(last_activity_at) > julianday(?) THEN last_activity_at
-           ELSE ?
-         END
-     WHERE id = ?
-       AND token_hash = ?
-       AND revoked_at IS NULL
-       AND julianday(expires_at) > julianday(?)
-       AND created_at = ?
-       AND EXISTS (
-         SELECT 1 FROM users
-         WHERE users.id = sessions.user_id AND users.is_active = 1
-       )`,
-  )
-    .bind(
-      nextExpiry,
-      new Date(absoluteExpiry).toISOString(),
-      new Date(absoluteExpiry).toISOString(),
-      nextExpiry,
-      nowIso,
-      nowIso,
-      row.session_id,
-      tokenHash,
-      nowIso,
-      row.session_created_at,
+  try {
+    const activityUpdate = await c.env.DB.prepare(
+      `UPDATE sessions
+       SET expires_at = CASE
+             WHEN julianday(expires_at) > julianday(?)
+               THEN CASE
+                 WHEN julianday(expires_at) < julianday(?) THEN expires_at
+                 ELSE ?
+               END
+             ELSE ?
+           END,
+           last_activity_at = CASE
+             WHEN julianday(last_activity_at) > julianday(?) THEN last_activity_at
+             ELSE ?
+           END
+       WHERE id = ?
+         AND token_hash = ?
+         AND revoked_at IS NULL
+         AND julianday(expires_at) > julianday(?)
+         AND created_at = ?
+         AND EXISTS (
+           SELECT 1 FROM users
+           WHERE users.id = sessions.user_id AND users.is_active = 1
+         )`,
     )
-    .run();
+      .bind(
+        nextExpiry,
+        new Date(absoluteExpiry).toISOString(),
+        new Date(absoluteExpiry).toISOString(),
+        nextExpiry,
+        nowIso,
+        nowIso,
+        row.session_id,
+        tokenHash,
+        nowIso,
+        row.session_created_at,
+      )
+      .run();
 
-  if (activityUpdate.meta.changes !== 1) {
-    return c.json({ error: "Authentication required" }, 401);
+    if (activityUpdate.meta.changes !== 1) {
+      return c.json({ error: "Authentication required" }, 401);
+    }
+  } catch (error) {
+    console.error("Session activity update failed.", error);
+    // Sesi sudah diverifikasi melalui SELECT. Kegagalan memperpanjang sesi
+    // tidak boleh menggagalkan request utama; cookie tetap memakai expiry lama.
   }
 
   c.set("authUser", {

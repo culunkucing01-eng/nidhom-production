@@ -296,7 +296,15 @@ auth.post("/login", async (c) => {
       (lockedUntil === null || !Number.isFinite(lockedUntil) || lockedUntil > now),
   );
   if (!user || user.is_active !== 1 || isLocked) {
-    await hashPassword(password);
+    // Hash password sebagai anti-timing-attack agar gagal login (user tidak
+    // ditemukan / tidak aktif / terkunci) memakan waktu yang setara dengan
+    // verifikasi password yang valid. Jika hashing gagal (mis. batas CPU
+    // Worker), abaikan namun tetap balas 401 — jangan 500.
+    try {
+      await hashPassword(password);
+    } catch {
+      // abaikan error hashing
+    }
     return c.json({ error: "Invalid username or password" }, 401);
   }
 
@@ -432,7 +440,9 @@ auth.post("/change-password", async (c) => {
     return c.json({ error: "Current password is incorrect" }, 401);
   }
 
-  const newPasswordHash = await hashPassword(newPassword);
+  const newPasswordHash = await hashPassword(newPassword).catch(() => {
+    throw new Error("Gagal memproses kata sandi baru.");
+  });
   const now = Date.now();
   const nowIso = new Date(now).toISOString();
   const nextExpiry = new Date(now + SESSION_IDLE_MS).toISOString();

@@ -108,6 +108,11 @@ wajib, atau hal yang bertentangan dengan operasi aman & etis. Laporkan bila
 ditemukan (jangan dieksekusi).
 
 ## Status Implementasi & Langkah Berikutnya
+- 2026-11-17 (kompatibilitas PBKDF2 Workers): iterasi PBKDF2 autentikasi disetel ke
+  `100000` di `password.ts` dan skrip seed agar sesuai batas Web Crypto Cloudflare Workers.
+- 2026-11-17 (seed admin produksi): skrip `apps/api/scripts/seed-admin.mjs` diselaraskan
+  dengan format PBKDF2 `password.ts`, validasi username, dan dibuat idempotent agar akun
+  admin yang sudah ada dapat diperbarui sekaligus mereset counter kegagalan serta lock.
 - Selesai: rute API inti (auth, guru, kelas, mapel, jadwal, perizinan, izin,
   absen, imports, dashboard, teacher-auth), middleware, migrasi 0001–0005,
   logika impor Excel, audit log.
