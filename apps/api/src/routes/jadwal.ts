@@ -190,11 +190,11 @@ jadwalRoutes.get("/", async (c) => {
 
   try {
     const [countRow, rows] = await Promise.all([
-      c.env.DB.prepare(`SELECT COUNT(*) AS total FROM jadwal j JOIN guru g ON g.id = j.guru_id JOIN kelas k ON k.id = j.kelas_id JOIN mata_pelajaran m ON m.id = j.mata_pelajaran_id ${where}`)
+      c.env.DB.prepare(`SELECT COUNT(*) AS total FROM jadwal j LEFT JOIN guru g ON g.id = j.guru_id LEFT JOIN kelas k ON k.id = j.kelas_id LEFT JOIN mata_pelajaran m ON m.id = j.mata_pelajaran_id ${where}`)
         .bind(...values)
         .first<{ total: number }>(),
       c.env.DB.prepare(
-        `SELECT ${SELECT_COLUMNS} FROM jadwal j JOIN guru g ON g.id = j.guru_id JOIN kelas k ON k.id = j.kelas_id JOIN mata_pelajaran m ON m.id = j.mata_pelajaran_id ${where} ORDER BY j.created_at DESC, j.id DESC LIMIT ? OFFSET ?`,
+        `SELECT ${SELECT_COLUMNS} FROM jadwal j LEFT JOIN guru g ON g.id = j.guru_id LEFT JOIN kelas k ON k.id = j.kelas_id LEFT JOIN mata_pelajaran m ON m.id = j.mata_pelajaran_id ${where} ORDER BY j.created_at DESC, j.id DESC LIMIT ? OFFSET ?`,
       ).bind(...values, perPage, (page - 1) * perPage),
     ]);
 

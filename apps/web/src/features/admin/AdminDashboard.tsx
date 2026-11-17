@@ -1,8 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Card, Badge } from '../../components/ui'
-import { useToast } from '../../components/ui/Toast'
 import { getDashboardStats, type DashboardStats } from '../../lib/api'
-import { useAdminIzinPolling } from '../../hooks/useIzinPolling'
 import { IzinApprovalPanel } from './IzinApprovalPanel'
 import './AdminDashboard.css'
 
@@ -83,26 +81,12 @@ function SectionSkeleton() {
 }
 
 export function AdminDashboard() {
-  const { toast } = useToast()
   const [stats, setStats] = useState<DashboardStats['stats']>({})
   const [syncHistory, setSyncHistory] = useState<DashboardStats['recentSyncActivity']>([])
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
-  const [izinRefreshKey, setIzinRefreshKey] = useState(0)
-
-  // Polling: deteksi pengajuan izin PENDING baru dari guru
-  const handleNewPending = useCallback(
-    (newItems: { ref_code: string }[]) => {
-      toast(
-        `${newItems.length} pengajuan izin baru menunggu persetujuan.`,
-        'info',
-      )
-      setIzinRefreshKey((k) => k + 1)
-    },
-    [toast],
-  )
-  useAdminIzinPolling(handleNewPending)
+  const [izinRefreshKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false

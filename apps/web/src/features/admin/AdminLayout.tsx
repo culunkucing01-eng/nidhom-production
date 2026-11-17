@@ -1,6 +1,8 @@
-import { useContext, type ReactNode } from 'react'
+import { useCallback, useContext, type ReactNode } from 'react'
 import { Button, ThemeToggle, type Theme } from '../../components/ui'
 import { MuteButton } from '../../components/ui/MuteButton'
+import { useToast } from '../../components/ui/Toast'
+import { useAdminIzinPolling } from '../../hooks/useIzinPolling'
 import type { AuthenticatedUser } from '../../lib/api'
 import { AdminLayoutContext, type AdminScreen } from './AdminLayoutContext'
 import './AdminLayout.css'
@@ -14,7 +16,7 @@ const screenTitles: Record<AdminScreen, string> = {
   jadwal: 'Kelola Jadwal',
 }
 
-const navSections: AdminScreen[] = ['overview', 'izin']
+const navSections: AdminScreen[] = ['overview', 'izin', 'jadwal']
 
 /* Ikon minimalis untuk aksi cepat sidebar (mewarisi warna via currentColor) */
 function IconPlus() {
@@ -37,11 +39,7 @@ function IconUpload() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 16V4" /><path d="m7 9 5-5 5 5" /><path d="M4 20h16" /></svg>
   )
 }
-function IconCalendar() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M8 2v4M16 2v4" /><path d="M3 10h18" /></svg>
-  )
-}
+
 
 interface AdminLayoutProps {
   user: AuthenticatedUser
@@ -104,14 +102,24 @@ function AdminLayoutShell({
   theme,
   children,
 }: AdminLayoutShellProps) {
+  const { toast } = useToast()
   const { setScreen } = useContext(AdminLayoutContext) as { screen: AdminScreen; setScreen: (screen: AdminScreen) => void }
+
+  // Global polling: deteksi pengajuan izin baru di semua halaman admin
+  const handleNewPending = useCallback(
+    (newItems: { ref_code: string; guru_nama: string | null }[]) => {
+      const names = newItems.map((i) => i.guru_nama ?? i.ref_code).join(', ')
+      toast(`🔔 ${newItems.length} pengajuan izin baru dari ${names}`, 'info')
+    },
+    [toast],
+  )
+  useAdminIzinPolling(handleNewPending)
 
   const quickActions: { key: string; label: string; icon: ReactNode; screen?: AdminScreen }[] = [
     { key: 'guru', label: 'Tambah Guru', icon: <IconPlus />, screen: 'guru' },
     { key: 'kelas', label: 'Tambah Kelas', icon: <IconBuilding />, screen: 'kelas' },
     { key: 'mapel', label: 'Mata Pelajaran', icon: <IconBook />, screen: 'mapel' },
     { key: 'import', label: 'Import Excel', icon: <IconUpload /> },
-    { key: 'jadwal', label: 'Kelola Jadwal', icon: <IconCalendar />, screen: 'jadwal' },
   ]
 
   return (

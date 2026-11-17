@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Badge, Button, Card } from '../../components/ui'
-import { ApiError, getAbsenHistory, type AbsenRecord } from '../../lib/api'
+import { ApiError, adminListIzin, getAbsenHistory, type AbsenRecord, type IzinRecord } from '../../lib/api'
 
 export interface RekapitulasiPageProps {
   onBack: () => void
@@ -13,6 +13,13 @@ function statusVariant(status: string): 'info' | 'warning' | 'danger' | 'neutral
   if (status === 'Ghaib') return 'danger'
   if (status === 'Izin') return 'info'
   return 'neutral'
+}
+
+function izinVariant(status: string): 'success' | 'warning' | 'danger' | 'info' {
+  if (status === 'DISETUJUI') return 'success'
+  if (status === 'DITOLAK') return 'danger'
+  if (status === 'DISESUAIKAN') return 'info'
+  return 'warning'
 }
 
 function toMessage(error: unknown): string {
@@ -33,6 +40,7 @@ function formatDate(value: string): string {
 
 export function RekapitulasiPage({ onBack }: RekapitulasiPageProps) {
   const [rows, setRows] = useState<AbsenRecord[]>([])
+  const [izinRows, setIzinRows] = useState<IzinRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [status, setStatus] = useState('')
@@ -41,15 +49,19 @@ export function RekapitulasiPage({ onBack }: RekapitulasiPageProps) {
 
   useEffect(() => {
     let cancelled = false
-    getAbsenHistory({
-      per_page: 100,
-      status: status || undefined,
-      date_from: dateFrom || undefined,
-      date_to: dateTo || undefined,
-    })
-      .then((res) => {
+    Promise.all([
+      getAbsenHistory({
+        per_page: 100,
+        status: status || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+      }),
+      adminListIzin({ per_page: '20' }),
+    ])
+      .then(([absenRes, izinRes]) => {
         if (cancelled) return
-        setRows(res.data ?? [])
+        setRows(absenRes.data ?? [])
+        setIzinRows(izinRes.data ?? [])
         setError('')
         setLoading(false)
       })
@@ -123,6 +135,40 @@ export function RekapitulasiPage({ onBack }: RekapitulasiPageProps) {
         <p className="dl-alert dl-alert--error" role="alert">
           {error}
         </p>
+      )}
+
+      {izinRows.length > 0 && (
+        <Card>
+          <h2 style={{ marginBottom: '12px', fontSize: '16px' }}>Pengajuan Izin Terbaru</h2>
+          <div className="dl-table-wrapper">
+            <table className="dl-table">
+              <thead>
+                <tr>
+                  <th>Kode</th>
+                  <th>Guru</th>
+                  <th>Jenis</th>
+                  <th>Tanggal</th>
+                  <th>Status</th>
+                  <th>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody>
+                {izinRows.map((iz) => (
+                  <tr key={iz.id}>
+                    <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{iz.ref_code}</td>
+                    <td dir="auto">{iz.guru_nama || '—'}</td>
+                    <td>{iz.jenis}</td>
+                    <td>{formatDate(iz.tanggal)}</td>
+                    <td>
+                      <Badge variant={izinVariant(iz.status)}>{iz.status}</Badge>
+                    </td>
+                    <td dir="auto">{iz.keterangan || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
 
       <Card>
