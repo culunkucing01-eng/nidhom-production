@@ -15,8 +15,8 @@ export interface AuthenticatedUser {
 export class ApiError extends Error {
   readonly status: number
 
-  constructor(status: number) {
-    super(`Authentication API returned ${status}`)
+  constructor(message: string, status: number) {
+    super(message)
     this.name = 'ApiError'
     this.status = status
   }
@@ -74,7 +74,20 @@ async function requestJson(path: string, init?: RequestInit): Promise<unknown> {
   }
 
   if (!response.ok) {
-    throw new ApiError(response.status)
+    let serverMessage = ''
+    try {
+      const errorBody = (await response.json()) as unknown
+      if (isRecord(errorBody)) {
+        if (typeof errorBody.error === 'string' && errorBody.error.trim()) {
+          serverMessage = errorBody.error.trim()
+        } else if (typeof errorBody.message === 'string' && errorBody.message.trim()) {
+          serverMessage = errorBody.message.trim()
+        }
+      }
+    } catch {
+      /* body bukan JSON — biarkan pesan fallback */
+    }
+    throw new ApiError(serverMessage || `Permintaan gagal dengan status ${response.status}.`, response.status)
   }
 
   try {
@@ -158,9 +171,11 @@ export interface SyncActivity {
 export interface JadwalItem {
   id: string
   period: number
-  mapel_nama_arab?: string
+  mapel_nama_arab?: string | null
   mapel_nama_indo?: string | null
-  kelas_nama?: string
+  kelas_nama?: string | null
+  guru_kode?: string | null
+  guru_nama?: string | null
   [key: string]: unknown
 }
 
@@ -271,12 +286,27 @@ export async function getMapelList(params: { page?: number; per_page?: number; q
 }
 
 // ── Jadwal ─────────────────────────────────────────────────────────────────────────
-export async function getJadwalList(params: { page?: number; per_page?: number; filters?: Record<string, string> }): Promise<{ data: unknown[]; pagination: Record<string, unknown> }> {
+function extractList(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload
+  if (isRecord(payload)) {
+    for (const key of ['data', 'items', 'jadwal', 'rows']) {
+      const value = payload[key]
+      if (Array.isArray(value)) return value
+    }
+  }
+  return []
+}
+
+export async function getJadwalList(params: { page?: number; per_page?: number; filters?: Record<string, string> }): Promise<{ data: JadwalItem[]; pagination: Record<string, unknown> }> {
   const qs = new URLSearchParams()
   if (params.page) qs.set('page', String(params.page))
   if (params.per_page) qs.set('per_page', String(params.per_page))
   if (params.filters) qs.set('filters', JSON.stringify(params.filters))
-  return apiJson<{ data: JadwalItem[]; pagination: Record<string, unknown> }>(`/api/jadwal?${qs}`)
+  const payload = await apiJson<unknown>(`/api/jadwal?${qs}`)
+  return {
+    data: extractList(payload) as JadwalItem[],
+    pagination: (isRecord(payload) && isRecord(payload.pagination) ? payload.pagination : {}) as Record<string, unknown>,
+  }
 }
 export async function getJadwalTimetable(): Promise<{ days: string[]; periods: number[]; grid: Record<string, Record<string, unknown>>; count: number }> {
   return apiJson<{ days: string[]; periods: number[]; grid: Record<string, Record<string, unknown>>; count: number }>('/api/jadwal/timetable')

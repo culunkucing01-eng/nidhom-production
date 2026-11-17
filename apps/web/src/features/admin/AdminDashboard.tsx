@@ -101,11 +101,13 @@ export function AdminDashboard() {
         // Konversi hari berjalan (JS getDay: 0=Minggu..6=Sabtu) ke index tersebut.
         const jsDay = new Date().getDay()
         const todayIndex = jsDay === 0 ? 1 : jsDay === 6 ? 0 : jsDay - 1
-        const todayKey = days[todayIndex] ?? ''
+        const fallbackKey = ['sabtu', 'ahad', 'senin', 'selasa', 'rabu', 'kamis'][todayIndex]
+        const todayKey = days[todayIndex] ?? fallbackKey ?? ''
         const rows: JadwalItem[] = []
         for (const period of [1, 2, 3, 4]) {
-          const item = grid[todayKey]?.[period]
-          if (item) rows.push(item)
+          const bucket = grid[todayKey] ?? grid[fallbackKey] ?? {}
+          const item = bucket[period] ?? bucket[String(period)]
+          if (item && typeof item === 'object') rows.push(item)
         }
         setTodaySchedule(rows)
       })

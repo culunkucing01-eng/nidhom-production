@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Button, Card, Badge } from '../../components/ui'
-import { createJadwal, deleteJadwal, getJadwalList, updateJadwal } from '../../lib/api'
+import { createJadwal, deleteJadwal, getJadwalList, updateJadwal, type JadwalItem } from '../../lib/api'
 import { listGuru } from '../../lib/guruApi'
 import { listKelas } from '../../lib/kelasApi'
 import { listMapel } from '../../features/mapel/mapelApi'
@@ -15,18 +15,11 @@ interface Option {
   label: string
 }
 
-interface JadwalRecord {
-  id: string
+interface JadwalRecord extends JadwalItem {
   kelas_id: string
   guru_id: string
   mata_pelajaran_id: string
   day_index: number
-  period: number
-  kelas_nama?: string | null
-  guru_kode?: string | null
-  guru_nama?: string | null
-  mapel_nama_arab?: string | null
-  mapel_nama_indo?: string | null
   is_active?: number | null
 }
 
